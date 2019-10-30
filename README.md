@@ -1,2 +1,2 @@
 # TuxMan FPGA
- TuxMan accelerated by Spartan 3e Basys2 FPGA
+ TuxMan run by Spartan 3e Basys2 FPGA
