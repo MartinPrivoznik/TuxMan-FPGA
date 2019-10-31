@@ -33,8 +33,8 @@ use WORK.ROM_Game_Data.ALL;
 --use UNISIM.VComponents.all;
 
 entity PointsRAM is
-    Port ( pm_pos_x : in  STD_LOGIC_VECTOR (4 downto 0);
-			  pm_pos_y : in  STD_LOGIC_VECTOR (4 downto 0);
+    Port ( tm_pos_x : in  STD_LOGIC_VECTOR (4 downto 0);
+			  tm_pos_y : in  STD_LOGIC_VECTOR (4 downto 0);
            vga_pos_x : in  STD_LOGIC_VECTOR (4 downto 0);
            vga_pos_y : in  STD_LOGIC_VECTOR (4 downto 0);
            clk : in  STD_LOGIC;
@@ -55,8 +55,8 @@ checking_pacman_point_collision : process(clk)
 			if(reset = '1') then -- reset
 				points_RAM <= points_default_data;
 			else 
-				add_point <= points_RAM(to_integer(unsigned(pm_pos_x)), to_integer(unsigned(pm_pos_y)));
-				points_RAM(to_integer(unsigned(pm_pos_x)), to_integer(unsigned(pm_pos_y))) <= '0'; 
+				add_point <= points_RAM(to_integer(unsigned(tm_pos_x)), to_integer(unsigned(tm_pos_y)));
+				points_RAM(to_integer(unsigned(tm_pos_x)), to_integer(unsigned(tm_pos_y))) <= '0'; 
 			end if;
 		end if;
 end process;

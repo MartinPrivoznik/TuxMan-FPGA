@@ -1,0 +1,38 @@
+#Clk constraint
+NET "clk" TNM_NET = "clk";
+TIMESPEC "TS_clk" = PERIOD "clk" 20 ns HIGH 50 %;
+
+#VGA
+NET "B[0]" LOC = H13 | DRIVE = 2  | PULLUP ;
+NET "B[1]" LOC = J13 | DRIVE = 2  | PULLUP ;
+NET "G[0]" LOC = F14 | DRIVE = 2  | PULLUP ;
+NET "G[1]" LOC = G13 | DRIVE = 2  | PULLUP ;
+NET "G[2]" LOC = G14 | DRIVE = 2  | PULLUP ;
+NET "R[0]" LOC = C14 | DRIVE = 2  | PULLUP ;
+NET "R[1]" LOC = D13 | DRIVE = 2  | PULLUP ;
+NET "R[2]" LOC = F13 | DRIVE = 2  | PULLUP ;
+NET "HSync" LOC = J14 | DRIVE = 2  | PULLUP ;
+NET "VSync" LOC = K13 | DRIVE = 2  | PULLUP ;
+
+#PS2
+NET "ps2_data" LOC = C3;
+NET "ps2_clk" LOC = B1;
+
+
+#7-Segment display
+NET "segment_display_value[7]"   LOC = L14;
+NET "segment_display_value[6]"   LOC = H12;
+NET "segment_display_value[5]"   LOC = N14;
+NET "segment_display_value[4]"   LOC = N11;
+NET "segment_display_value[3]"   LOC = P12;
+NET "segment_display_value[2]"   LOC = L13;
+NET "segment_display_value[1]"   LOC = M12;
+NET "segment_display_value[0]"   LOC = N13;
+NET "active_segment_display[3]" LOC = F12;
+NET "active_segment_display[2]" LOC = J12;
+NET "active_segment_display[1]" LOC = M13;
+NET "active_segment_display[0]" LOC = K14;
+
+#Mandatory
+NET "clk" LOC = B8;
+NET "reset" LOC = A7;
