@@ -90,28 +90,28 @@ begin
 			end if;
 	end process;
 		
-		OUTP : process (CURRENT_STATE, strobe_in, ps2_key)
-			begin
-				strobe <= '0';
-			   extended_key <= '0';
-				case CURRENT_STATE is 
-					
-					when IDLE => if strobe_in='1' then 
-											if (ps2_key /= "11100000") and (ps2_key /= "11110000") then
+	OUTP : process (CURRENT_STATE, strobe_in, ps2_key)
+		begin
+			strobe <= '0';
+			extended_key <= '0';
+			case CURRENT_STATE is 
+				
+				when IDLE => if strobe_in='1' then 
+										if (ps2_key /= "11100000") and (ps2_key /= "11110000") then
+											strobe <= '1';
+										end if;
+								end if;
+				when EXTENDED => if strobe_in='1' then 
+											if ps2_key /= "11110000" then
 												strobe <= '1';
+												extended_key <= '1';
 											end if;
 									end if;
-					when EXTENDED => if strobe_in='1' then 
-												if ps2_key /= "11110000" then
-													strobe <= '1';
-													extended_key <= '1';
-												end if;
-										end if;
-					
-					when RELEASED => 
-					
-				end case;
-		end process;
+				
+				when RELEASED => 
+				
+			end case;
+	end process;
 
 
 end Behavioral;

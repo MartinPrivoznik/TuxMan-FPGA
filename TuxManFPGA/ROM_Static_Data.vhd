@@ -70,9 +70,9 @@ constant blueghost_default_position_x : STD_LOGIC_VECTOR(4 downto 0) := "01010";
 constant blueghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01001";
 
 constant yellowghost_default_position_x : STD_LOGIC_VECTOR(4 downto 0) := "01010";
-constant yellowghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01001";
+constant yellowghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01101";
 
 constant greenghost_default_position_x : STD_LOGIC_VECTOR(4 downto 0) := "01000";
-constant greenghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01001";
+constant greenghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01101";
 
 end ROM_Game_Data;
