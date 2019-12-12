@@ -19,6 +19,7 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use WORK.ROM_Game_Data.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -38,19 +39,53 @@ end Ghost_Controller;
 
 architecture Behavioral of Ghost_Controller is
 
-type T_STATE is (UP, LEFT, RIGHT, DOWN, RANDOM_SELECTION);
+type T_STATE is (UP, LEFT, RIGHT, DOWN);
 signal CURRENT_STATE, NEXT_STATE : T_STATE;
+signal random_shift_reg : STD_LOGIC_VECTOR(15 downto 0);
+signal random_directions : STD_LOGIC_VECTOR (1 downto 0);
+
+
+signal new_random_generator_value : STD_LOGIC;
+signal gen_val1 : STD_LOGIC;
+signal gen_val2 : STD_LOGIC;
 
 begin
 
-	TRANSP : process (CURRENT_STATE, ghost_collision) 
+	TRANSP : process (CURRENT_STATE, ghost_collision, random_directions) 
 		begin 
 			case CURRENT_STATE is 
-				when UP => 
-				when LEFT => 
-				when RIGHT => 
-				when DOWN => 
-				when RANDOM_SELECTION => 
+				when UP => if ghost_collision = '1' then
+									case random_directions is
+										when "00" => NEXT_STATE <= UP;
+										when "01" => NEXT_STATE <= LEFT;
+										when "10" => NEXT_STATE <= DOWN;
+										when others => NEXT_STATE <= RIGHT;
+									end case;
+								end if;
+				when LEFT => if ghost_collision = '1' then
+									case random_directions is
+										when "00" => NEXT_STATE <= UP;
+										when "01" => NEXT_STATE <= LEFT;
+										when "10" => NEXT_STATE <= DOWN;
+										when others => NEXT_STATE <= RIGHT;
+									end case;
+								end if;
+				when RIGHT => if ghost_collision = '1' then
+									case random_directions is
+										when "00" => NEXT_STATE <= UP;
+										when "01" => NEXT_STATE <= LEFT;
+										when "10" => NEXT_STATE <= DOWN;
+										when others => NEXT_STATE <= RIGHT;
+									end case;
+								end if;
+				when DOWN => if ghost_collision = '1' then
+									case random_directions is
+										when "00" => NEXT_STATE <= UP;
+										when "01" => NEXT_STATE <= LEFT;
+										when "10" => NEXT_STATE <= DOWN;
+										when others => NEXT_STATE <= RIGHT;
+									end case;
+								end if;
 			end case;
 	end process;
 		
@@ -58,23 +93,45 @@ begin
 		begin 
 			if (clk'event and clk ='1') then 
 				if (reset = '1') then
-					CURRENT_STATE <= IDLE;
+					CURRENT_STATE <= UP;
 				else 
 					CURRENT_STATE <= NEXT_STATE;
 				end if;
 			end if;
 	end process;
 		
-	OUTP : process (CURRENT_STATE, ghost_collision)
+	OUTP : process (CURRENT_STATE, ghost_collision, random_directions)
 		begin
 			case CURRENT_STATE is 
-				when UP => 
-				when LEFT => 
-				when RIGHT => 
-				when DOWN => 
-				when RANDOM_SELECTION => 
+				when UP => if ghost_collision = '1' then
+									directions <= random_directions;
+								end if;
+				when LEFT => if ghost_collision = '1' then
+									directions <= random_directions;
+								end if;
+				when RIGHT => if ghost_collision = '1' then
+									directions <= random_directions;
+								end if;
+				when DOWN => if ghost_collision = '1' then
+									directions <= random_directions;
+								end if;
 			end case;
 	end process;
-
+	
+	gen_val1 <= random_shift_reg(0) XOR random_shift_reg(2);
+	gen_val2 <= gen_val1 XOR random_shift_reg(3);
+	new_random_generator_value <= gen_val2 XOR random_shift_reg(5);
+	random_directions <= random_shift_reg(13) & random_shift_reg(15);
+	
+	random_num_generator : process(clk)
+		begin
+			if(clk'event and clk='1') then -- rising edge on CLK          
+				if(reset = '1') then -- reset
+					random_shift_reg <= default_random_generator_seed;
+				else 
+					random_shift_reg <= new_random_generator_value & random_shift_reg(15 downto 1);
+				end if;
+			end if;
+	end process;
 
 end Behavioral;

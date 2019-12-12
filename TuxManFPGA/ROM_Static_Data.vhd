@@ -75,4 +75,6 @@ constant yellowghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01101
 constant greenghost_default_position_x : STD_LOGIC_VECTOR(4 downto 0) := "01000";
 constant greenghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01101";
 
+constant default_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "1010011010001110";
+
 end ROM_Game_Data;

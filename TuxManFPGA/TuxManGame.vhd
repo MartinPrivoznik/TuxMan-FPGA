@@ -208,6 +208,14 @@ end component Segment_Display;
 
 signal point_counter : STD_LOGIC_VECTOR(15 downto 0);
 
+
+component Ghost_Controller is
+    Port ( ghost_collision : in  STD_LOGIC;
+           directions : out  STD_LOGIC_VECTOR (1 downto 0);
+           clk : in  STD_LOGIC;
+           reset : in  STD_LOGIC);
+end component Ghost_Controller;
+
 begin
 
 --vga coordinates settings
@@ -222,6 +230,34 @@ is_yellowghost <= '1' when (yellowghost_position_x =  VGA_HPos(8 downto 4)) and 
 					  else '0';
 is_greenghost <= '1' when (greenghost_position_x =  VGA_HPos(8 downto 4)) and (greenghost_position_y =  VGA_VPos(8 downto 4))
 					  else '0';
+
+red_ghost_controll : Ghost_Controller port map (
+	ghost_collision => redghost_collision,
+	directions => redghost_directions,
+	clk => clk,
+	reset => reset
+);
+
+blue_ghost_controll : Ghost_Controller port map (
+	ghost_collision => blueghost_collision,
+	directions => blueghost_directions,
+	clk => clk,
+	reset => reset
+);
+
+yellow_ghost_controll : Ghost_Controller port map (
+	ghost_collision => yellowghost_collision,
+	directions => yellowghost_directions,
+	clk => clk,
+	reset => reset
+);
+
+green_ghost_controll : Ghost_Controller port map (
+	ghost_collision => greenghost_collision,
+	directions => greenghost_directions,
+	clk => clk,
+	reset => reset
+);
 
 PS2_Module : PS2 port map (
 	ps2_data => ps2_data,
@@ -336,92 +372,9 @@ setting_tuxman_directions : process(clk)
 end process;
 
 redghost_step_enable <= (not redghost_collision) and step;
-
-setting_redghost_directions : process(clk)
-	begin
-		if(clk'event and clk='1') then -- rising edge on CLK          
-			if(reset = '1') then -- reset
-				redghost_directions <= "00";
-			else 
-				if (PS2_strobe = '1') and (PS2_extended = '1') then
-					case PS2_key is 
-						when "01110101" => redghost_directions <= "00"; --Up
-						when "01101011" => redghost_directions <= "01"; --Left
-						when "01110010" => redghost_directions <= "10"; --Down
-						when "01110100" => redghost_directions <= "11"; --Right
-						when others =>
-					end case;
-				end if;
-			end if;
-		end if;
-		
-end process;
-
 blueghost_step_enable <= (not blueghost_collision) and step;
-
-setting_blueghost_directions : process(clk)
-	begin
-		if(clk'event and clk='1') then -- rising edge on CLK          
-			if(reset = '1') then -- reset
-				blueghost_directions <= "00";
-			else 
-				if (PS2_strobe = '1') and (PS2_extended = '1') then
-					case PS2_key is 
-						when "01110101" => blueghost_directions <= "00"; --Up
-						when "01101011" => blueghost_directions <= "01"; --Left
-						when "01110010" => blueghost_directions <= "10"; --Down
-						when "01110100" => blueghost_directions <= "11"; --Right
-						when others =>
-					end case;
-				end if;
-			end if;
-		end if;
-		
-end process;
-
 yellowghost_step_enable <= (not yellowghost_collision) and step;
-
-setting_yellowghost_directions : process(clk)
-	begin
-		if(clk'event and clk='1') then -- rising edge on CLK          
-			if(reset = '1') then -- reset
-				yellowghost_directions <= "00";
-			else 
-				if (PS2_strobe = '1') and (PS2_extended = '1') then
-					case PS2_key is 
-						when "01110101" => yellowghost_directions <= "00"; --Up
-						when "01101011" => yellowghost_directions <= "01"; --Left
-						when "01110010" => yellowghost_directions <= "10"; --Down
-						when "01110100" => yellowghost_directions <= "11"; --Right
-						when others =>
-					end case;
-				end if;
-			end if;
-		end if;
-		
-end process;
-
 greenghost_step_enable <= (not greenghost_collision) and step;
-
-setting_greenghost_directions : process(clk)
-	begin
-		if(clk'event and clk='1') then -- rising edge on CLK          
-			if(reset = '1') then -- reset
-				greenghost_directions <= "00";
-			else 
-				if (PS2_strobe = '1') and (PS2_extended = '1') then
-					case PS2_key is 
-						when "01110101" => greenghost_directions <= "00"; --Up
-						when "01101011" => greenghost_directions <= "01"; --Left
-						when "01110010" => greenghost_directions <= "10"; --Down
-						when "01110100" => greenghost_directions <= "11"; --Right
-						when others =>
-					end case;
-				end if;
-			end if;
-		end if;
-		
-end process;
 
 --increased positions
 tuxman_position_x_inc <=  tuxman_position_x + 1;
@@ -473,7 +426,7 @@ setting_tuxman_position : process(clk)
 		end if;
 end process;
 
-checking_wall_before_tuxman : process(tuxman_position_x_inc, tuxman_position_x_dec, tuxman_position_y_inc, tuxman_position_y_dec, tuxman_directions)
+checking_wall_before_tuxman : process(tuxman_position_x_inc, tuxman_position_x_dec, tuxman_position_y_inc, tuxman_position_y_dec, tuxman_position_x, tuxman_position_y, tuxman_directions)
 	begin
 		case tuxman_directions is
 			when "00" => tuxman_new_position_y <= tuxman_position_y_dec; --Up
@@ -508,7 +461,7 @@ setting_redghost_position : process(clk)
 		end if;
 end process;
 
-checking_wall_before_redghost : process(redghost_position_y, redghost_position_x, redghost_position_x_inc, redghost_position_x_dec, redghost_position_y_inc, redghost_position_y_dec, redghost_directions)
+checking_wall_before_redghost : process(redghost_position_y, redghost_position_x, redghost_position_x_inc, redghost_position_x_dec, redghost_position_y_inc, redghost_position_y_dec, redghost_position_x, redghost_position_y, redghost_directions)
 	begin
 		case redghost_directions is
 			when "00" => redghost_new_position_y <= redghost_position_y_dec; --Up
@@ -543,7 +496,7 @@ setting_blueghost_position : process(clk)
 		end if;
 end process;
 
-checking_wall_before_blueghost : process(blueghost_position_x, blueghost_position_y, blueghost_position_x_inc, blueghost_position_x_dec, blueghost_position_y_inc, blueghost_position_y_dec, blueghost_directions)
+checking_wall_before_blueghost : process(blueghost_position_x, blueghost_position_y, blueghost_position_x_inc, blueghost_position_x_dec, blueghost_position_y_inc, blueghost_position_y_dec, blueghost_position_x, blueghost_position_y, blueghost_directions)
 	begin
 		case blueghost_directions is
 			when "00" => blueghost_new_position_y <= blueghost_position_y_dec; --Up
@@ -578,7 +531,7 @@ setting_yellowghost_position : process(clk)
 		end if;
 end process;
 
-checking_wall_before_yellowghost : process(yellowghost_position_x, yellowghost_position_y, yellowghost_position_x_inc, yellowghost_position_x_dec, yellowghost_position_y_inc, yellowghost_position_y_dec, yellowghost_directions)
+checking_wall_before_yellowghost : process(yellowghost_position_x, yellowghost_position_y, yellowghost_position_x_inc, yellowghost_position_x_dec, yellowghost_position_y_inc, yellowghost_position_y_dec, yellowghost_position_x, yellowghost_position_y, yellowghost_directions)
 	begin
 		case yellowghost_directions is
 			when "00" => yellowghost_new_position_y <= yellowghost_position_y_dec; --Up
@@ -613,7 +566,7 @@ setting_greenghost_position : process(clk)
 		end if;
 end process;
 
-checking_wall_before_greenghost : process(greenghost_position_x, greenghost_position_y, greenghost_position_x_inc, greenghost_position_x_dec, greenghost_position_y_inc, greenghost_position_y_dec, greenghost_directions)
+checking_wall_before_greenghost : process(greenghost_position_x, greenghost_position_y, greenghost_position_x_inc, greenghost_position_x_dec, greenghost_position_y_inc, greenghost_position_y_dec, greenghost_position_x, greenghost_position_y, greenghost_directions)
 	begin
 		case greenghost_directions is
 			when "00" => greenghost_new_position_y <= greenghost_position_y_dec; --Up
@@ -730,7 +683,7 @@ TuxMan_Map_Activity : process(VGA_HPos, VGA_VPos)
 		end if;
 end process;
 
-Monitor_Coloring_Mux : process(VGA_active, map_active, is_wall,VGA_HPos,VGA_VPos, is_tuxman, tuxman_open) --Output setter
+Monitor_Coloring_Mux : process(VGA_active, map_active, is_wall,VGA_HPos,VGA_VPos, is_tuxman, tuxman_open, is_redghost, is_blueghost, is_greenghost, is_yellowghost, Points_is_point) --Output setter
 	begin
 		if VGA_active = '1' then
 			if map_active = '1' then
