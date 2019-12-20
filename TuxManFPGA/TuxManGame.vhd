@@ -231,28 +231,28 @@ is_yellowghost <= '1' when (yellowghost_position_x =  VGA_HPos(8 downto 4)) and 
 is_greenghost <= '1' when (greenghost_position_x =  VGA_HPos(8 downto 4)) and (greenghost_position_y =  VGA_VPos(8 downto 4))
 					  else '0';
 
-red_ghost_controll : Ghost_Controller port map (
+red_ghost_control : Ghost_Controller port map (
 	ghost_collision => redghost_collision,
 	directions => redghost_directions,
 	clk => clk,
 	reset => reset
 );
 
-blue_ghost_controll : Ghost_Controller port map (
+blue_ghost_control : Ghost_Controller port map (
 	ghost_collision => blueghost_collision,
 	directions => blueghost_directions,
 	clk => clk,
 	reset => reset
 );
 
-yellow_ghost_controll : Ghost_Controller port map (
+yellow_ghost_control : Ghost_Controller port map (
 	ghost_collision => yellowghost_collision,
 	directions => yellowghost_directions,
 	clk => clk,
 	reset => reset
 );
 
-green_ghost_controll : Ghost_Controller port map (
+green_ghost_control : Ghost_Controller port map (
 	ghost_collision => greenghost_collision,
 	directions => greenghost_directions,
 	clk => clk,

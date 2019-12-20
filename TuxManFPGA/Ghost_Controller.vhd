@@ -61,6 +61,8 @@ begin
 										when "10" => NEXT_STATE <= DOWN;
 										when others => NEXT_STATE <= RIGHT;
 									end case;
+								else 
+									NEXT_STATE <= UP;
 								end if;
 				when LEFT => if ghost_collision = '1' then
 									case random_directions is
@@ -69,6 +71,8 @@ begin
 										when "10" => NEXT_STATE <= DOWN;
 										when others => NEXT_STATE <= RIGHT;
 									end case;
+								else 
+									NEXT_STATE <= LEFT;
 								end if;
 				when RIGHT => if ghost_collision = '1' then
 									case random_directions is
@@ -77,6 +81,8 @@ begin
 										when "10" => NEXT_STATE <= DOWN;
 										when others => NEXT_STATE <= RIGHT;
 									end case;
+								else 
+									NEXT_STATE <= RIGHT;
 								end if;
 				when DOWN => if ghost_collision = '1' then
 									case random_directions is
@@ -85,6 +91,8 @@ begin
 										when "10" => NEXT_STATE <= DOWN;
 										when others => NEXT_STATE <= RIGHT;
 									end case;
+								else 
+									NEXT_STATE <= DOWN;
 								end if;
 			end case;
 	end process;
