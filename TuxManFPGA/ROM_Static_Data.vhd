@@ -75,6 +75,9 @@ constant yellowghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01001
 constant greenghost_default_position_x : STD_LOGIC_VECTOR(4 downto 0) := "01001";
 constant greenghost_default_position_y : STD_LOGIC_VECTOR(4 downto 0) := "01001";
 
-constant default_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "1010011010001110";
+constant redghost_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "1010011010001110";
+constant blueghost_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "1010011010001100";
+constant greenghost_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "0001101010101011";
+constant yellowghost_random_generator_seed : STD_LOGIC_VECTOR(15 downto 0) := "0110100011100011";
 
 end ROM_Game_Data;

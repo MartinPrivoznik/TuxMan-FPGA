@@ -212,6 +212,7 @@ signal point_counter : STD_LOGIC_VECTOR(15 downto 0);
 component Ghost_Controller is
     Port ( ghost_collision : in  STD_LOGIC;
            directions : out  STD_LOGIC_VECTOR (1 downto 0);
+			  generator_seed : in STD_LOGIC_VECTOR(15 downto 0);
            clk : in  STD_LOGIC;
            reset : in  STD_LOGIC);
 end component Ghost_Controller;
@@ -234,6 +235,7 @@ is_greenghost <= '1' when (greenghost_position_x =  VGA_HPos(8 downto 4)) and (g
 red_ghost_control : Ghost_Controller port map (
 	ghost_collision => redghost_collision,
 	directions => redghost_directions,
+	generator_seed => redghost_random_generator_seed,
 	clk => clk,
 	reset => reset
 );
@@ -241,6 +243,7 @@ red_ghost_control : Ghost_Controller port map (
 blue_ghost_control : Ghost_Controller port map (
 	ghost_collision => blueghost_collision,
 	directions => blueghost_directions,
+	generator_seed => blueghost_random_generator_seed,
 	clk => clk,
 	reset => reset
 );
@@ -248,6 +251,7 @@ blue_ghost_control : Ghost_Controller port map (
 yellow_ghost_control : Ghost_Controller port map (
 	ghost_collision => yellowghost_collision,
 	directions => yellowghost_directions,
+	generator_seed => yellowghost_random_generator_seed,
 	clk => clk,
 	reset => reset
 );
@@ -255,6 +259,7 @@ yellow_ghost_control : Ghost_Controller port map (
 green_ghost_control : Ghost_Controller port map (
 	ghost_collision => greenghost_collision,
 	directions => greenghost_directions,
+	generator_seed => greenghost_random_generator_seed,
 	clk => clk,
 	reset => reset
 );

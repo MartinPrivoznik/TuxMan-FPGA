@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------
+					----------------------------------------------------------------------------------
 -- Company: 
 -- Engineer: 
 -- 
@@ -19,6 +19,8 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use WORK.ROM_Game_Data.ALL;
 
 -- Uncomment the following library declaration if using
@@ -33,6 +35,7 @@ use WORK.ROM_Game_Data.ALL;
 entity Ghost_Controller is
     Port ( ghost_collision : in  STD_LOGIC;
            directions : out  STD_LOGIC_VECTOR (1 downto 0);
+			  generator_seed : in STD_LOGIC_VECTOR(15 downto 0);
            clk : in  STD_LOGIC;
            reset : in  STD_LOGIC);
 end Ghost_Controller;
@@ -44,6 +47,7 @@ signal CURRENT_STATE, NEXT_STATE : T_STATE;
 signal random_shift_reg : STD_LOGIC_VECTOR(15 downto 0);
 signal random_directions : STD_LOGIC_VECTOR (1 downto 0);
 
+signal counter : STD_LOGIC_VECTOR(1 downto 0);
 
 signal new_random_generator_value : STD_LOGIC;
 signal gen_val1 : STD_LOGIC;
@@ -51,10 +55,10 @@ signal gen_val2 : STD_LOGIC;
 
 begin
 
-	TRANSP : process (CURRENT_STATE, ghost_collision, random_directions) 
+	TRANSP : process (CURRENT_STATE, ghost_collision, random_directions, counter) 
 		begin 
 			case CURRENT_STATE is 
-				when UP => if ghost_collision = '1' then
+				when UP => if ((ghost_collision = '1') and (counter = "11")) then
 									case random_directions is
 										when "00" => NEXT_STATE <= UP;
 										when "01" => NEXT_STATE <= LEFT;
@@ -64,7 +68,7 @@ begin
 								else 
 									NEXT_STATE <= UP;
 								end if;
-				when LEFT => if ghost_collision = '1' then
+				when LEFT => if ((ghost_collision = '1') and (counter = "11")) then
 									case random_directions is
 										when "00" => NEXT_STATE <= UP;
 										when "01" => NEXT_STATE <= LEFT;
@@ -74,7 +78,7 @@ begin
 								else 
 									NEXT_STATE <= LEFT;
 								end if;
-				when RIGHT => if ghost_collision = '1' then
+				when RIGHT => if ((ghost_collision = '1') and (counter = "11")) then
 									case random_directions is
 										when "00" => NEXT_STATE <= UP;
 										when "01" => NEXT_STATE <= LEFT;
@@ -84,7 +88,7 @@ begin
 								else 
 									NEXT_STATE <= RIGHT;
 								end if;
-				when DOWN => if ghost_collision = '1' then
+				when DOWN => if ((ghost_collision = '1') and (counter = "11")) then
 									case random_directions is
 										when "00" => NEXT_STATE <= UP;
 										when "01" => NEXT_STATE <= LEFT;
@@ -108,20 +112,28 @@ begin
 			end if;
 	end process;
 		
-	OUTP : process (CURRENT_STATE, ghost_collision, random_directions)
+	OUTP : process (CURRENT_STATE, ghost_collision, random_directions, counter)
 		begin
 			case CURRENT_STATE is 
-				when UP => if ghost_collision = '1' then
+				when UP => if ((ghost_collision = '1') and (counter = "11")) then
 									directions <= random_directions;
+								else
+									directions <= "00";
 								end if;
-				when LEFT => if ghost_collision = '1' then
+				when LEFT => if ((ghost_collision = '1') and (counter = "11")) then
 									directions <= random_directions;
+								 else
+									directions <= "01";
+								 end if;
+				when RIGHT => if ((ghost_collision = '1') and (counter = "11")) then
+									directions <= random_directions;
+								  else
+									directions <= "11";
 								end if;
-				when RIGHT => if ghost_collision = '1' then
+				when DOWN => if ((ghost_collision = '1') and (counter = "11")) then
 									directions <= random_directions;
-								end if;
-				when DOWN => if ghost_collision = '1' then
-									directions <= random_directions;
+								 else
+									directions <= "10";
 								end if;
 			end case;
 	end process;
@@ -135,11 +147,22 @@ begin
 		begin
 			if(clk'event and clk='1') then -- rising edge on CLK          
 				if(reset = '1') then -- reset
-					random_shift_reg <= default_random_generator_seed;
+					random_shift_reg <= generator_seed;
 				else 
 					random_shift_reg <= new_random_generator_value & random_shift_reg(15 downto 1);
 				end if;
 			end if;
-	end process;
+		end process;
+	
+	waiting_for_actual_data : process(clk)
+		begin
+			if(clk'event and clk='1') then -- rising edge on CLK          
+				if(reset = '1') then -- reset
+					counter <= (others => '0');
+				else 
+					counter <= counter + 1;
+				end if;
+			end if;
+		end process;
 
 end Behavioral;
