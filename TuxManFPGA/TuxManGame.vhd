@@ -52,6 +52,7 @@ signal counter : STD_LOGIC_VECTOR(31 downto 0); --Used for slowing down clk sign
 																--and performing a tuxman step
 signal arbitr_counter : STD_LOGIC_VECTOR(1 downto 0);
 
+signal is_eaten : STD_LOGIC;
 signal step : STD_LOGIC;
 signal step_edge_detection : STD_LOGIC;		
 
@@ -213,6 +214,7 @@ component Ghost_Controller is
     Port ( ghost_collision : in  STD_LOGIC;
            directions : out  STD_LOGIC_VECTOR (1 downto 0);
 			  generator_seed : in STD_LOGIC_VECTOR(15 downto 0);
+			  tuxman_eaten : in STD_LOGIC;
            clk : in  STD_LOGIC;
            reset : in  STD_LOGIC);
 end component Ghost_Controller;
@@ -236,6 +238,7 @@ red_ghost_control : Ghost_Controller port map (
 	ghost_collision => redghost_collision,
 	directions => redghost_directions,
 	generator_seed => redghost_random_generator_seed,
+	tuxman_eaten => is_eaten,
 	clk => clk,
 	reset => reset
 );
@@ -244,6 +247,7 @@ blue_ghost_control : Ghost_Controller port map (
 	ghost_collision => blueghost_collision,
 	directions => blueghost_directions,
 	generator_seed => blueghost_random_generator_seed,
+	tuxman_eaten => is_eaten,
 	clk => clk,
 	reset => reset
 );
@@ -252,6 +256,7 @@ yellow_ghost_control : Ghost_Controller port map (
 	ghost_collision => yellowghost_collision,
 	directions => yellowghost_directions,
 	generator_seed => yellowghost_random_generator_seed,
+	tuxman_eaten => is_eaten,
 	clk => clk,
 	reset => reset
 );
@@ -260,6 +265,7 @@ green_ghost_control : Ghost_Controller port map (
 	ghost_collision => greenghost_collision,
 	directions => greenghost_directions,
 	generator_seed => greenghost_random_generator_seed,
+	tuxman_eaten => is_eaten,
 	clk => clk,
 	reset => reset
 );
@@ -352,6 +358,11 @@ counter_rising_edge_detection : process(clk)
 		end if;
 end process;
 
+is_eaten <= '1' when (((tuxman_position_x = redghost_position_x) and (tuxman_position_y = redghost_position_y)) or 
+							 ((tuxman_position_x = blueghost_position_x) and (tuxman_position_y = blueghost_position_y)) or
+							 ((tuxman_position_x = yellowghost_position_x) and (tuxman_position_y = yellowghost_position_y)) or
+							 ((tuxman_position_x = greenghost_position_x) and (tuxman_position_y = greenghost_position_y)))
+					  else '0';
 --allowing step
 step <= (not step_edge_detection) and counter(23);
 tuxman_step_enable <= (not collision) and step;
@@ -362,14 +373,18 @@ setting_tuxman_directions : process(clk)
 			if(reset = '1') then -- reset
 				tuxman_directions <= "00";
 			else 
-				if (PS2_strobe = '1') and (PS2_extended = '1') then
-					case PS2_key is 
-						when "01110101" => tuxman_directions <= "00"; --Up
-						when "01101011" => tuxman_directions <= "01"; --Left
-						when "01110010" => tuxman_directions <= "10"; --Down
-						when "01110100" => tuxman_directions <= "11"; --Right
-						when others =>
-					end case;
+				if (is_eaten = '1') then
+					tuxman_directions <= "00";
+				else
+					if (PS2_strobe = '1') and (PS2_extended = '1') then
+						case PS2_key is 
+							when "01110101" => tuxman_directions <= "00"; --Up
+							when "01101011" => tuxman_directions <= "01"; --Left
+							when "01110010" => tuxman_directions <= "10"; --Down
+							when "01110100" => tuxman_directions <= "11"; --Right
+							when others =>
+						end case;
+					end if;
 				end if;
 			end if;
 		end if;
@@ -417,14 +432,19 @@ setting_tuxman_position : process(clk)
 				tuxman_position_x <= tuxman_default_position_x;
 				tuxman_position_y <= tuxman_default_position_y;
 			else 
-				if tuxman_step_enable = '1' then
-					if tuxman_new_position_x = map_resolution_x then -- From right to left
-						tuxman_position_x <= "00000";
-					elsif tuxman_new_position_x > map_resolution_x then --From left to right
-						tuxman_position_x <= map_resolution_x(4 downto 0) - 1;
-					else
-						tuxman_position_x <= tuxman_new_position_x;
-						tuxman_position_y <= tuxman_new_position_y;
+				if (is_eaten = '1') then
+					tuxman_position_x <= tuxman_default_position_x;
+					tuxman_position_y <= tuxman_default_position_y;
+				else
+					if tuxman_step_enable = '1' then
+						if tuxman_new_position_x = map_resolution_x then -- From right to left
+							tuxman_position_x <= "00000";
+						elsif tuxman_new_position_x > map_resolution_x then --From left to right
+							tuxman_position_x <= map_resolution_x(4 downto 0) - 1;
+						else
+							tuxman_position_x <= tuxman_new_position_x;
+							tuxman_position_y <= tuxman_new_position_y;
+						end if;
 					end if;
 				end if;
 			end if;
@@ -452,14 +472,19 @@ setting_redghost_position : process(clk)
 				redghost_position_x <= redghost_default_position_x;
 				redghost_position_y <= redghost_default_position_y;
 			else 
-				if redghost_step_enable = '1' then
-					if redghost_new_position_x = map_resolution_x then -- From right to left
-						redghost_position_x <= "00000";
-					elsif redghost_new_position_x > map_resolution_x then --From left to right
-						redghost_position_x <= map_resolution_x(4 downto 0) - 1;
-					else
-						redghost_position_x <= redghost_new_position_x;
-						redghost_position_y <= redghost_new_position_y;
+				if (is_eaten = '1') then
+					redghost_position_x <= redghost_default_position_x;
+					redghost_position_y <= redghost_default_position_y;
+				else
+					if redghost_step_enable = '1' then
+						if redghost_new_position_x = map_resolution_x then -- From right to left
+							redghost_position_x <= "00000";
+						elsif redghost_new_position_x > map_resolution_x then --From left to right
+							redghost_position_x <= map_resolution_x(4 downto 0) - 1;
+						else
+							redghost_position_x <= redghost_new_position_x;
+							redghost_position_y <= redghost_new_position_y;
+						end if;
 					end if;
 				end if;
 			end if;
@@ -487,14 +512,19 @@ setting_blueghost_position : process(clk)
 				blueghost_position_x <= blueghost_default_position_x;
 				blueghost_position_y <= blueghost_default_position_y;
 			else 
-				if blueghost_step_enable = '1' then
-					if blueghost_new_position_x = map_resolution_x then -- From right to left
-						blueghost_position_x <= "00000";
-					elsif blueghost_new_position_x > map_resolution_x then --From left to right
-						blueghost_position_x <= map_resolution_x(4 downto 0) - 1;
-					else
-						blueghost_position_x <= blueghost_new_position_x;
-						blueghost_position_y <= blueghost_new_position_y;
+				if (is_eaten = '1') then
+					blueghost_position_x <= blueghost_default_position_x;
+					blueghost_position_y <= blueghost_default_position_y;
+				else
+					if blueghost_step_enable = '1' then
+						if blueghost_new_position_x = map_resolution_x then -- From right to left
+							blueghost_position_x <= "00000";
+						elsif blueghost_new_position_x > map_resolution_x then --From left to right
+							blueghost_position_x <= map_resolution_x(4 downto 0) - 1;
+						else
+							blueghost_position_x <= blueghost_new_position_x;
+							blueghost_position_y <= blueghost_new_position_y;
+						end if;
 					end if;
 				end if;
 			end if;
@@ -522,14 +552,19 @@ setting_yellowghost_position : process(clk)
 				yellowghost_position_x <= yellowghost_default_position_x;
 				yellowghost_position_y <= yellowghost_default_position_y;
 			else 
-				if yellowghost_step_enable = '1' then
-					if yellowghost_new_position_x = map_resolution_x then -- From right to left
-						yellowghost_position_x <= "00000";
-					elsif yellowghost_new_position_x > map_resolution_x then --From left to right
-						yellowghost_position_x <= map_resolution_x(4 downto 0) - 1;
-					else
-						yellowghost_position_x <= yellowghost_new_position_x;
-						yellowghost_position_y <= yellowghost_new_position_y;
+				if (is_eaten = '1') then
+					yellowghost_position_x <= yellowghost_default_position_x;
+					yellowghost_position_y <= yellowghost_default_position_y;
+				else
+					if yellowghost_step_enable = '1' then
+						if yellowghost_new_position_x = map_resolution_x then -- From right to left
+							yellowghost_position_x <= "00000";
+						elsif yellowghost_new_position_x > map_resolution_x then --From left to right
+							yellowghost_position_x <= map_resolution_x(4 downto 0) - 1;
+						else
+							yellowghost_position_x <= yellowghost_new_position_x;
+							yellowghost_position_y <= yellowghost_new_position_y;
+						end if;
 					end if;
 				end if;
 			end if;
@@ -557,14 +592,19 @@ setting_greenghost_position : process(clk)
 				greenghost_position_x <= greenghost_default_position_x;
 				greenghost_position_y <= greenghost_default_position_y;
 			else 
-				if greenghost_step_enable = '1' then
-					if greenghost_new_position_x = map_resolution_x then -- From right to left
-						greenghost_position_x <= "00000";
-					elsif greenghost_new_position_x > map_resolution_x then --From left to right
-						greenghost_position_x <= map_resolution_x(4 downto 0) - 1;
-					else
-						greenghost_position_x <= greenghost_new_position_x;
-						greenghost_position_y <= greenghost_new_position_y;
+				if (is_eaten = '1') then
+					greenghost_position_x <= greenghost_default_position_x;
+					greenghost_position_y <= greenghost_default_position_y;
+				else
+					if greenghost_step_enable = '1' then
+						if greenghost_new_position_x = map_resolution_x then -- From right to left
+							greenghost_position_x <= "00000";
+						elsif greenghost_new_position_x > map_resolution_x then --From left to right
+							greenghost_position_x <= map_resolution_x(4 downto 0) - 1;
+						else
+							greenghost_position_x <= greenghost_new_position_x;
+							greenghost_position_y <= greenghost_new_position_y;
+						end if;
 					end if;
 				end if;
 			end if;

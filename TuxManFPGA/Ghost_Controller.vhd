@@ -36,6 +36,7 @@ entity Ghost_Controller is
     Port ( ghost_collision : in  STD_LOGIC;
            directions : out  STD_LOGIC_VECTOR (1 downto 0);
 			  generator_seed : in STD_LOGIC_VECTOR(15 downto 0);
+			  tuxman_eaten : in STD_LOGIC;
            clk : in  STD_LOGIC;
            reset : in  STD_LOGIC);
 end Ghost_Controller;
@@ -58,45 +59,61 @@ begin
 	TRANSP : process (CURRENT_STATE, ghost_collision, random_directions, counter) 
 		begin 
 			case CURRENT_STATE is 
-				when UP => if ((ghost_collision = '1') and (counter = "11")) then
-									case random_directions is
-										when "00" => NEXT_STATE <= UP;
-										when "01" => NEXT_STATE <= LEFT;
-										when "10" => NEXT_STATE <= DOWN;
-										when others => NEXT_STATE <= RIGHT;
-									end case;
-								else 
+				when UP =>  if tuxman_eaten = '1' then
 									NEXT_STATE <= UP;
+								else
+									if ((ghost_collision = '1') and (counter = "11")) then
+										case random_directions is
+											when "00" => NEXT_STATE <= UP;
+											when "01" => NEXT_STATE <= LEFT;
+											when "10" => NEXT_STATE <= DOWN;
+											when others => NEXT_STATE <= RIGHT;
+										end case;
+									else 
+										NEXT_STATE <= UP;
+									end if;
 								end if;
-				when LEFT => if ((ghost_collision = '1') and (counter = "11")) then
-									case random_directions is
-										when "00" => NEXT_STATE <= UP;
-										when "01" => NEXT_STATE <= LEFT;
-										when "10" => NEXT_STATE <= DOWN;
-										when others => NEXT_STATE <= RIGHT;
-									end case;
-								else 
-									NEXT_STATE <= LEFT;
+				when LEFT =>if tuxman_eaten = '1' then
+									NEXT_STATE <= UP;
+								else
+									if ((ghost_collision = '1') and (counter = "11")) then
+										case random_directions is
+											when "00" => NEXT_STATE <= UP;
+											when "01" => NEXT_STATE <= LEFT;
+											when "10" => NEXT_STATE <= DOWN;
+											when others => NEXT_STATE <= RIGHT;
+										end case;
+									else 
+										NEXT_STATE <= LEFT;
+									end if;
 								end if;
-				when RIGHT => if ((ghost_collision = '1') and (counter = "11")) then
-									case random_directions is
-										when "00" => NEXT_STATE <= UP;
-										when "01" => NEXT_STATE <= LEFT;
-										when "10" => NEXT_STATE <= DOWN;
-										when others => NEXT_STATE <= RIGHT;
-									end case;
+				when RIGHT =>  if tuxman_eaten = '1' then
+										NEXT_STATE <= UP;
+									else
+										if ((ghost_collision = '1') and (counter = "11")) then
+											case random_directions is
+												when "00" => NEXT_STATE <= UP;
+												when "01" => NEXT_STATE <= LEFT;
+												when "10" => NEXT_STATE <= DOWN;
+												when others => NEXT_STATE <= RIGHT;
+											end case;
+										else 
+											NEXT_STATE <= RIGHT;
+										end if;
+									end if;
+				when DOWN =>if tuxman_eaten = '1' then
+									NEXT_STATE <= UP;
 								else 
-									NEXT_STATE <= RIGHT;
-								end if;
-				when DOWN => if ((ghost_collision = '1') and (counter = "11")) then
-									case random_directions is
-										when "00" => NEXT_STATE <= UP;
-										when "01" => NEXT_STATE <= LEFT;
-										when "10" => NEXT_STATE <= DOWN;
-										when others => NEXT_STATE <= RIGHT;
-									end case;
-								else 
-									NEXT_STATE <= DOWN;
+									if ((ghost_collision = '1') and (counter = "11")) then
+										case random_directions is
+											when "00" => NEXT_STATE <= UP;
+											when "01" => NEXT_STATE <= LEFT;
+											when "10" => NEXT_STATE <= DOWN;
+											when others => NEXT_STATE <= RIGHT;
+										end case;
+									else 
+										NEXT_STATE <= DOWN;
+									end if;
 								end if;
 			end case;
 	end process;
@@ -115,26 +132,42 @@ begin
 	OUTP : process (CURRENT_STATE, ghost_collision, random_directions, counter)
 		begin
 			case CURRENT_STATE is 
-				when UP => if ((ghost_collision = '1') and (counter = "11")) then
-									directions <= random_directions;
-								else
+				when UP =>	if tuxman_eaten = '1' then
 									directions <= "00";
+								else
+									if ((ghost_collision = '1') and (counter = "11")) then
+										directions <= random_directions;
+									else
+										directions <= "00";
+									end if;
 								end if;
-				when LEFT => if ((ghost_collision = '1') and (counter = "11")) then
-									directions <= random_directions;
-								 else
-									directions <= "01";
-								 end if;
-				when RIGHT => if ((ghost_collision = '1') and (counter = "11")) then
-									directions <= random_directions;
-								  else
-									directions <= "11";
-								end if;
-				when DOWN => if ((ghost_collision = '1') and (counter = "11")) then
-									directions <= random_directions;
-								 else
-									directions <= "10";
-								end if;
+				when LEFT => 	if tuxman_eaten = '1' then
+										directions <= "00";
+									else
+										if ((ghost_collision = '1') and (counter = "11")) then
+											directions <= random_directions;
+										else
+											directions <= "01";
+									 end if;
+									end if;
+				when RIGHT =>	if tuxman_eaten = '1' then
+										directions <= "00";
+									else 
+										if ((ghost_collision = '1') and (counter = "11")) then
+											directions <= random_directions;
+										else
+											directions <= "11";
+										end if;
+									end if;
+				when DOWN => 	if tuxman_eaten = '1' then
+										directions <= "00";
+									else
+										if ((ghost_collision = '1') and (counter = "11")) then
+											directions <= random_directions;
+										else
+											directions <= "10";
+										end if;
+									end if;
 			end case;
 	end process;
 	
@@ -149,7 +182,11 @@ begin
 				if(reset = '1') then -- reset
 					random_shift_reg <= generator_seed;
 				else 
-					random_shift_reg <= new_random_generator_value & random_shift_reg(15 downto 1);
+					if tuxman_eaten = '1' then
+						random_shift_reg <= generator_seed;
+					else
+						random_shift_reg <= new_random_generator_value & random_shift_reg(15 downto 1);
+					end if;
 				end if;
 			end if;
 		end process;
