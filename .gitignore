@@ -73,3 +73,8 @@ _xmsgs/
 *.xml
 *.xise
 *.psg
+
+#LaTeX
+*.synctex
+TuxMan-FPGA.log
+TuxMan-FPGA.synctex.gz
