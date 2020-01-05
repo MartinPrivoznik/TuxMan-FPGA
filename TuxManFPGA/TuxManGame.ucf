@@ -33,6 +33,11 @@ NET "active_segment_display[2]" LOC = J12;
 NET "active_segment_display[1]" LOC = M13;
 NET "active_segment_display[0]" LOC = K14;
 
+#Lifes
+NET "lifes_LED[0]" LOC = M5;
+NET "lifes_LED[1]" LOC = M11;
+NET "lifes_LED[2]" LOC = P7;
+
 #Mandatory
 NET "clk" LOC = B8;
 NET "reset" LOC = A7;

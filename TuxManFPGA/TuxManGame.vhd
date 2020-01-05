@@ -1,12 +1,12 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company: SPŠSE a VOŠ Liberec
+-- Engineer: Martin Pøívozník
 -- 
 -- Create Date:    17:18:00 10/25/2019 
 -- Design Name: 
--- Module Name:    TuxManGame - Behavioral 
--- Project Name: 
--- Target Devices: 
+-- Module Name:   TuxManGame - Behavioral 
+-- Project Name: 	TuxMan-FPGA
+-- Target Devices: Basys2 - Spartan
 -- Tool versions: 
 -- Description: 
 --
@@ -40,8 +40,9 @@ entity TuxManGame is
 			  B : out STD_LOGIC_VECTOR(1 downto 0);
 			  HSync : out STD_LOGIC;
 			  VSync : out STD_LOGIC;
-           active_segment_display : out  STD_LOGIC_VECTOR (3 downto 0);
-           segment_display_value : out  STD_LOGIC_VECTOR (7 downto 0);
+           active_segment_display : out STD_LOGIC_VECTOR (3 downto 0);
+           segment_display_value : out STD_LOGIC_VECTOR (7 downto 0);
+			  lifes_LED : out STD_LOGIC_VECTOR (2 downto 0);
            reset : in  STD_LOGIC;
            clk : in  STD_LOGIC);
 end TuxManGame;
@@ -52,6 +53,9 @@ signal counter : STD_LOGIC_VECTOR(31 downto 0); --Used for slowing down clk sign
 																--and performing a tuxman step
 signal arbitr_counter : STD_LOGIC_VECTOR(1 downto 0);
 
+signal is_lost_sign : STD_LOGIC;
+signal game_lost : STD_LOGIC;
+signal actual_lifes : STD_LOGIC_VECTOR (1 downto 0);
 signal is_eaten : STD_LOGIC;
 signal step : STD_LOGIC;
 signal step_edge_detection : STD_LOGIC;		
@@ -234,6 +238,8 @@ is_yellowghost <= '1' when (yellowghost_position_x =  VGA_HPos(8 downto 4)) and 
 is_greenghost <= '1' when (greenghost_position_x =  VGA_HPos(8 downto 4)) and (greenghost_position_y =  VGA_VPos(8 downto 4))
 					  else '0';
 
+is_lost_sign <= '0'; -- Add lost sign later
+
 red_ghost_control : Ghost_Controller port map (
 	ghost_collision => redghost_collision,
 	directions => redghost_directions,
@@ -358,13 +364,40 @@ counter_rising_edge_detection : process(clk)
 		end if;
 end process;
 
+lifes_counting : process(clk)
+	begin
+		if(clk'event and clk='1') then -- rising edge on CLK          
+			if(reset = '1') then -- reset
+				actual_lifes <= "11";
+				game_lost <= '0';
+			else 
+				if (is_eaten = '1') then
+					if (actual_lifes = "01") then
+						game_lost <= '1';
+					end if;
+					actual_lifes <= actual_lifes - 1;
+				end if;
+			end if;
+		end if;
+end process;
+
+lifes_passed_to_LEDs : process(actual_lifes)
+	begin
+		case actual_lifes is
+			when "00" => lifes_LED <= "000";
+			when "01" => lifes_LED <= "001";
+			when "10" => lifes_LED <= "011";
+			when others => lifes_LED <= "111";
+		end case;
+end process;
+
 is_eaten <= '1' when (((tuxman_position_x = redghost_position_x) and (tuxman_position_y = redghost_position_y)) or 
 							 ((tuxman_position_x = blueghost_position_x) and (tuxman_position_y = blueghost_position_y)) or
 							 ((tuxman_position_x = yellowghost_position_x) and (tuxman_position_y = yellowghost_position_y)) or
 							 ((tuxman_position_x = greenghost_position_x) and (tuxman_position_y = greenghost_position_y)))
 					  else '0';
 --allowing step
-step <= (not step_edge_detection) and counter(23);
+step <= (not step_edge_detection) and counter(23) when game_lost = '0' else '0';
 tuxman_step_enable <= (not collision) and step;
 
 setting_tuxman_directions : process(clk)
@@ -732,104 +765,110 @@ Monitor_Coloring_Mux : process(VGA_active, map_active, is_wall,VGA_HPos,VGA_VPos
 	begin
 		if VGA_active = '1' then
 			if map_active = '1' then
-				if is_wall = '1' then
-					R<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-					G<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-					B<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+				if is_lost_sign = '1' then
+					R<= textblock_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5);
+					G<= textblock_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
+					B<= textblock_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
 				else
-					if is_redghost = '1' then
-						if tuxman_open = '1' then
-								R<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-								G<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-								B<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-						else			 
-								R<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-								G<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-								B<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-						end if;
+					if is_wall = '1' then
+						R<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+						G<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+						B<= wall_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 					else
-						if is_blueghost = '1' then
+						if is_redghost = '1' then
 							if tuxman_open = '1' then
-								R<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); 
-								G<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-								B<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-							else 
-								R<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-								G<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-								B<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+									R<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+									G<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+									B<= redghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+							else			 
+									R<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+									G<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+									B<= redghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 							end if;
 						else
-							if is_yellowghost = '1' then
+							if is_blueghost = '1' then
 								if tuxman_open = '1' then
-				               R<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); --Right
-									G<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-									B<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+									R<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); 
+									G<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+									B<= blueghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 								else 
-								   R<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-									G<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-									B<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+									R<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+									G<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+									B<= blueghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 								end if;
 							else
-								if is_greenghost = '1' then
+								if is_yellowghost = '1' then
 									if tuxman_open = '1' then
-										R<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); 
-										G<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-										B<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-										
-									else
-										R<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-										G<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-										B<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+										R<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); --Right
+										G<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+										B<= yellowghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+									else 
+										R<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+										G<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+										B<= yellowghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 									end if;
 								else
-									if is_tuxman = '1' then
+									if is_greenghost = '1' then
 										if tuxman_open = '1' then
-											case tuxman_directions is 
-												when "00" => R<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(7 downto 5); --Up
-																 G<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(1 downto 0);
-												
-												when "01" => R<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(7 downto 5); --Left
-																 G<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(1 downto 0);
-												
-												when "10" => R<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
-																 G<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
-																 
-												when others => R<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); --Right
-																	G<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-																	B<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-											end case;
+											R<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); 
+											G<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+											B<= greenghost_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 											
 										else
-											case tuxman_directions is 
-												when "00" => R<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(7 downto 5); --Up
-																 G<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(1 downto 0);
-																 
-												when "01" => R<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(7 downto 5); --Left
-																 G<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(1 downto 0);
-												
-												when "10" => R<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
-																 G<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
-																 B<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
-																 
-												when others => R<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
-																	G<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
-																	B<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
-											end case;
+											R<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+											G<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+											B<= greenghost_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
 										end if;
 									else
-										if Points_is_point = '1' then
-											R<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
-											G<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
-											B<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
+										if is_tuxman = '1' then
+											if tuxman_open = '1' then
+												case tuxman_directions is 
+													when "00" => R<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(7 downto 5); --Up
+																	 G<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(1 downto 0);
+													
+													when "01" => R<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(7 downto 5); --Left
+																	 G<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_open_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(1 downto 0);
+													
+													when "10" => R<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
+																	 G<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_open_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
+																	 
+													when others => R<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5); --Right
+																		G<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+																		B<= tuxman_open_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+												end case;
+												
+											else
+												case tuxman_directions is 
+													when "00" => R<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(7 downto 5); --Up
+																	 G<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_HPos(3 downto 0))),to_integer(unsigned("1111" - VGA_VPos(3 downto 0))))(1 downto 0);
+																	 
+													when "01" => R<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(7 downto 5); --Left
+																	 G<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_closed_texture(to_integer(unsigned("1111" - VGA_VPos(3 downto 0))),to_integer(unsigned("1111" - VGA_HPos(3 downto 0))))(1 downto 0);
+													
+													when "10" => R<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
+																	 G<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
+																	 B<= tuxman_closed_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
+																	 
+													when others => R<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(7 downto 5);
+																		G<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(4 downto 2);
+																		B<= tuxman_closed_texture(to_integer(unsigned(VGA_VPos(3 downto 0))),to_integer(unsigned(VGA_HPos(3 downto 0))))(1 downto 0);
+												end case;
+											end if;
 										else
-											R <= "000";
-											G <= "000";
-											B <= "00";
+											if Points_is_point = '1' then
+												R<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(7 downto 5); --Down
+												G<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(4 downto 2);
+												B<= point_texture(to_integer(unsigned(VGA_HPos(3 downto 0))),to_integer(unsigned(VGA_VPos(3 downto 0))))(1 downto 0);
+											else
+												R <= "000";
+												G <= "000";
+												B <= "00";
+											end if;
 										end if;
 									end if;
 								end if;
