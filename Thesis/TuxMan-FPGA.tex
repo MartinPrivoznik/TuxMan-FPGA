@@ -1,0 +1,280 @@
+\documentclass{report}
+\usepackage{ucs} 
+\usepackage[utf8x]{inputenc} 	
+\usepackage[czech]{babel}
+\usepackage{pdfpages}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{datetime}
+\usepackage{titlesec}
+\newcommand*\wildcard[2][5cm]{\vspace*{2cm}\parbox{#1}{\hrulefill\par#2}}  
+
+\title{TuxMan - FPGA}
+\titleformat{\paragraph}
+\date{11/4/2019}
+\author{Martin Přívozník}
+
+\begin{document}
+  \includepdf[page={1}]{Front-Page}
+  \newpage
+  \pagenumbering{gobble}
+
+ \section*{Anotace (Resumé)}
+ Tématem práce je návrh arkádové hry na RTL úrovni a její implementace na programovatelném hradlovém poli, tj. FPGA. Uživatelský vstup je zajištěn pomocí PS/2 klávesnice a výstup prostřednictvím VGA. K implementaci je použit jazyk VHDL.
+
+\section*{Klíčová slova}
+RTL, programovatelné hradlové pole, FPGA, PS/2, VGA, VHDL
+
+ \section*{Summary}
+ The topic of this thesis is designing an arcade game on an RTL level and its implementation on a programmable gate array, i.e. FPGA. User input is provided by PS/2 keyboard and output is shown using VGA. Language called VHDL is used for implementation.
+
+\section*{Keywords}
+RTL, programmable gate array, FPGA, PS/2, VGA, VHDL
+
+ \newpage
+\vspace*{\fill}
+
+ \section*{Čestné prohlášení}
+ Prohlašuji, že jsem předkládanou maturitní/ročníkovou práci vypracoval sám a uvedl jsem veškerou použitou literaturu a bibliografické citace.
+
+\vspace{ 2cm}
+  V Liberci dne \today
+  \hspace{2cm}
+  \wildcard{Martin Přívozník}
+
+\newpage
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+
+\chapter*{Úvod}
+\addcontentsline{toc}{section}{Úvod}
+
+\chapter{Analýza}
+Tato kapitola obsahuje stručný souhrn znalostí a informací potřebných pro následný návrh a implementaci. V sekci~\ref{sec:cislicovynavrh} je vysvětlen číslicový obvod a postup jeho návrhut. V sekci~\ref{sec:fpga} stručně vysvětluji programovatelné hradlové pole a dále vybranou vývojovou desku. Sekce~\ref{sec:rozhrani} se zabývá použitými komunikačními rozhraními, které zajišťují uživatelský vstup a výstup. Na závěr kapitoli, v sekci~\ref{sec:hrapacman} vysvětluji princip a funkčnost hry, jíž je vzorem pro můj návrh.
+
+\section{Číslicový návrh}\label{sec:cislicovynavrh}
+V této sekci se věnuji tomu, co je číslicový obvod a jak jej navrhnout jak ve schématu, tak v jazyce popisujícím hardware. V podsekci~\ref{sec:kombinacniobvody} rozeberu logické funkce, prostředky jejich popisu a realizace pomocí logických hradel. Podsekce~\ref{sec:sekvencniobvody}  je zaměřená na návrh sekvenčních obvodů a synchronních sekvenčních automatů (FSM), na což naváže podsekce~\ref{sec:synchronniaasynchronninavrh}, ve které vysvěluji princip hodinových domén a plně sekvenčního návrhu. V podsekci~\ref{sec:jazykvhdl} stručně ukážu, jak převést schéma číslicového obvodu do kódu v jazyce popisujícím hardware (Hardware Description Language, HDL), v mém případě do jazyka Very High Speed Integrated Circuit Hardware Description Language (VHDL)
+
+\subsection{Kombinační obvody}\label{sec:kombinacniobvody}
+
+\subsubsection{Booleovská funkce}
+Booleovská funkce je funkce $N$ vstupů a $M$ výstupů nad množinou $\{0, 1\}$. V případě, kdy má funkce více jak jeden výstup, lze ji rozdělit na $M$ funkcí s jedním výstupem. Pro její reprezentaci můžeme využít kombinatorické struktury, které funkci vyjadřují. Příkladem reprezentace je pravdivostní tabulka, viz. tabulka~\ref{tab:andtable}, kde $in_1$ a $in_2$ jsou vstupní hodnoty a $out$ je výstupní.
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{ |c|c|c| } 
+   	\hline
+	$in_1$ & $in_2$ & $out$ \\
+   	\hline
+	$0$ & $0$ & $f(0,0)$ \\
+   	\hline
+	$0$ & $1$ & $f(0,1)$ \\
+   	\hline
+	$1$ & $0$ & $f(1,0)$ \\
+   	\hline
+	$1$ & $1$ & $f(1,1)$ \\
+   	\hline
+\end{tabular}
+    \caption{Pravdivostní tabulka.}
+    \label{tab:andtable}
+\end{table}
+Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnotu pro všechny možné kombinace vstuních hodnot. Dalším podstatným příkladem je Booleovská formule. K vyjádření formule a zároveň k popisu booleovské funkce používáme nejčastěji tyto základní funkce, viz. tabulka~\ref{tab:logickefunkce}
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{ |c|c|c| } 
+   	\hline
+	Název & Pravdivostní tabulka & Formule \\
+   	\hline
+	AND (logický součin) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $0$ \\
+	   	\hline
+		$0$ & $1$ & $0$ \\
+	   	\hline
+		$1$ & $0$ & $0$ \\
+	   	\hline
+		$1$ & $1$ & $1$ \\
+	   	\hline
+	\end{tabular} & $out = in_1*in_2$ \\
+   	\hline
+	NAND (negovaný logický součin) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $1$ \\
+	   	\hline
+		$0$ & $1$ & $1$ \\
+	   	\hline
+		$1$ & $0$ & $1$ \\
+	   	\hline
+		$1$ & $1$ & $0$ \\
+	   	\hline
+	\end{tabular} & $out = \overline{in_1*in_2}$ \\
+	\hline
+	OR (logický součet) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $0$ \\
+	   	\hline
+		$0$ & $1$ & $1$ \\
+	   	\hline
+		$1$ & $0$ & $1$ \\
+	   	\hline
+		$1$ & $1$ & $1$ \\
+	   	\hline
+	\end{tabular} & $out = in_1+in_2$ \\
+	\hline
+	NOR (negovaný logický součet) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $1$ \\
+	   	\hline
+		$0$ & $1$ & $0$ \\
+	   	\hline
+		$1$ & $0$ & $0$ \\
+	   	\hline
+		$1$ & $1$ & $0$ \\
+	   	\hline
+	\end{tabular} & $out = \overline{in_1+in_2}$ \\
+	\hline
+	NOT (logická negace) & \begin{tabular}{ |c|c| } 
+	   	\hline
+		$in_1$ & $out$ \\
+	   	\hline
+		$0$ & $1$ \\
+	   	\hline
+		$1$ & $0$\\
+	   	\hline
+	\end{tabular} & $out = \overline{in_1}$ \\
+	\hline
+	YES (opakovač) & \begin{tabular}{ |c|c| } 
+	   	\hline
+		$in_1$ & $out$ \\
+	   	\hline
+		$0$ & $0$ \\
+	   	\hline
+		$1$ & $1$\\
+	   	\hline
+	\end{tabular} & $out = in_1$ \\
+	\hline
+	XOR (exkluzivní logický součet) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $0$ \\
+	   	\hline
+		$0$ & $1$ & $1$ \\
+	   	\hline
+		$1$ & $0$ & $1$ \\
+	   	\hline
+		$1$ & $1$ & $0$ \\
+	   	\hline
+	\end{tabular} & $out = in_1 \oplus in_2$ \\
+	\hline
+	XNOR (negovaný exkluzivní logický součet) & \begin{tabular}{ |c|c|c| } 
+	   	\hline
+		$in_1$ & $in_2$ & $out$ \\
+	   	\hline
+		$0$ & $0$ & $1$ \\
+	   	\hline
+		$0$ & $1$ & $0$ \\
+	   	\hline
+		$1$ & $0$ & $0$ \\
+	   	\hline
+		$1$ & $1$ & $1$ \\
+	   	\hline
+	\end{tabular} & $out =\overline{in_1 \oplus in_2}$ \\
+   	\hline
+\end{tabular}
+    \caption{Tabulka nejpoužívanějších základních logických funkcí.}
+    \label{tab:logickefunkce}
+\end{table}
+Uvážíme-li Booleovu algebru, platí pro OR a AND následující (tabulka~\ref{tab:pravidla})
+\begin{table}[h]
+\centering
+\begin{tabular}{ c c c } 
+	$a+ b = b + a$ & $a*b = b*a$ & (komutativita) \\
+	$a+(b+c) = (a+b) + c$ & $a*(b*c) = (a*b)*c$ & (asociativita) \\
+	$a+(b*c) = (a+b) * (a+c)$ & $a*(b+c) = (a*b) + (a*c)$ & (distributivita) \\
+	$a+0 = a$ & $a*1 = a$ & (neutralita 0 a 1) \\
+	$a + \overline{a} = 1$ & $a * \overline{a} = 0$ & (vlastnosti negace) \\
+\end{tabular}
+    \caption{Tahle tabulka by měla být pod textem "platí pro OR a AND následující:".}
+    \label{tab:pravidla}
+\end{table}
+
+
+\subsection{Sekvenční obvody}\label{sec:sekvencniobvody}
+\subsection{Synchronní a asynchronní návrh}\label{sec:synchronniaasynchronninavrh}
+\subsection{Jazyk VHDL}\label{sec:jazykvhdl}
+
+\section{Programovatelná hradlová pole FPGA}\label{sec:fpga}
+Tato sekce se zabývá tím, co jsou programovatelná hradlová pole (Field of programmable gate array, FPGA) a jak probíhá práce s těmito hradlovými poli na vývojové desce. V podsekci~\ref{sec:dostupneprostredky} popisuji části FPGA, které jsou použity pro implementaci číslicového obvodu. Podsekce~\ref{sec:logickasynteza} stručně vysvětluje kroky nezbytné pro implementaci samotného číslicového obvodu na základě jeho popisu VHDL kódem. V podsekcích \ref{sec:basys2} a \ref{sec:xilinxise} je stručně popsána použitá vývojová deska a vývojové prostředí, které se váže k FPGA, které deska obsahuje.
+
+\subsection{Dostupné prostředky}\label{sec:dostupneprostredky}
+\subsection{Logická syntéza}\label{sec:logickasynteza}
+\subsection{Vývojová deska Digilent Basys 2}\label{sec:basys2}
+\subsection{Prostředí Xilinx ISE}\label{sec:xilinxise}
+
+\section{Rozhraní}\label{sec:rozhrani}
+Tato sekce popisuje komunikační rozhraní použitá v návrhu a implementaci, která zajišťují uživatelský vstup a výstup. V podsekci~\ref{sec:7segment} vysvětluji rozhraní 7-segmentového displeje. Sekce  \ref{sec:ps2} a \ref{sec:vga} popisují protokoly PS/2 a VGA.
+\subsection{7-segmentový displej}\label{sec:7segment}
+\subsection{PS/2}\label{sec:ps2}
+\subsection{VGA}\label{sec:vga}
+
+\section{Hra Pacman}\label{sec:hrapacman}
+Tato sekce vysvětluje hru, již má můj návrh klonovat. Podsekce~\ref{sec:principhry} popisuje cíl a pravidla hry. V podsekci~\ref{sec:ovladanihry} vysvětluji ovládání hry.
+\subsection{Princip}\label{sec:principhry}
+\subsection{Ovládání}\label{sec:ovladanihry}
+
+\chapter{Návrh hry}
+V této kapitole se zabývám návrhem herní logiky, na základě které je navržen číslicový obvod pro finální implementaci. Sekce~\ref{sec:specifikacehry} rozebírá konkrétní prvky hry a návrhy pro jejich řešení. V sekci~\ref{sec:hernitextury} vysvětluji, jak jsou navržené textury, které se zobrazují na výstup.
+
+\section{Specifikace hry}\label{sec:specifikacehry}
+V této sekci rozebírám konkrétní prvky hry a vysvětluji návrhy pro jejich řešení. V podsekci~\ref{sec:cilachovani} popisuji, jak má hra fungovat jako celek a jak dosáhnout cíle hry. Podsekce~\ref{sec:mapajakomrizka} vysvětluje návrh herního pole, na kterém se hra odehrává a sekce~\ref{sec:postavyachovani} poté popisuje, jak se chovají jednotlivé postavy na navrženém herním poli.
+
+\subsection{Cíl a chování hry}\label{sec:cilachovani}
+\subsection{Herní mapa}\label{sec:mapajakomrizka}
+\subsection{Postavy a jejich chování}\label{sec:postavyachovani}
+
+\section{Herní textury}\label{sec:hernitextury}
+Tato sekce popisuje návrh textur, které se zobrazují na výstup. V podsekci~\ref{sec:RGB} vysvětluji způsob použití barev pro výstup. Sekce~\ref{sec:texturyjakomatice} se zabývá tím, v jaké podobě jsou textury, které se mají propisovat. 
+\subsection{RGB}\label{sec:RGB}
+\subsection{Textury jako matice barev}\label{sec:texturyjakomatice}
+
+\chapter{Implementace}
+Tato kapitola se zabývá návrhem číslicových obvodů pro jednotlivé logicky oddělené bloky na základě herní logiky a jejich implementací. Sekce \ref{sec:ctenizps2} a \ref{sec:vystupnavga} popisují číslicové obvody navržené pro čtení vstupních dat z klávesnice a generování výstupu na monitor. Sekce~\ref{sec:hernilogika} poté vysvětluje vnitřní zapojení jednotlivých bloků zajišťujících logickou funkčnost hry. V sekci~\ref{sec:celek} je poté popsáno kompletní zapojení všech částí do funkčního celku.
+
+\section{Modul pro čtení z PS/2 klávesnice}\label{sec:ctenizps2}
+V této sekci vysvětluji číslicový obvod, který jako celek zpracovává vstupní signál z klávesnice a generuje daný výstup. Podsekce~\ref{sec:zpracovanivstupu} rozebírá číslicový obvod pro zpracování vstupního signálu a podsekce~\ref{sec:generovanivystupu} řeší číslicový obvod pro generování výstupního signálu.
+\subsection{Zpracování vstupu}\label{sec:zpracovanivstupu}
+\subsection{Generování výstupu}\label{sec:generovanivystupu}
+
+\section{Modul pro výstup na VGA monitor}\label{sec:vystupnavga}
+Tato sekce popisuje číslicový obvod, který zařizuje funkčnost monitoru a možnost propsání výstupu na něj. V podsekci~\ref{sec:casovanivga} popisuji obvod, který zajišťuje funkčnost a v podsekci~\ref{sec:propsanitextur} vysvětluji, jak propisuji textury na monitor.
+\subsection{Časování VGA}\label{sec:casovanivga}
+\subsection{Propsání textur na monitor}\label{sec:propsanitextur}
+
+\section{Herní logika}\label{sec:hernilogika}
+V této sekci popisuji číslicový obvod, který zajišťuje vnitřní funkcionalitu samotné hry. V podsekci~\ref{sec:hernimapa} je vysvětlený obvod, který řeší herní plochu, na které se postavy pohybují. Podsekce~\ref{sec:ovladanipostav} popisuje obvod ovládající postavy ve hře a v podsekci~\ref{sec:cilehry} je vysvětlen obvod, který řeší splnění cílů hry.
+\subsection{Herní mapa}\label{sec:hernimapa}
+\subsection{Ovládání postav}\label{sec:ovladanipostav}
+\subsection{Cíle hry}\label{sec:cilehry}
+
+\chapter{Testování}
+
+ \chapter*{Závěr}
+
+\begin{thebibliography}{9}
+\bibitem{Kubatova} 
+\end{thebibliography}
+
+ \addcontentsline{toc}{section}{Závěr}
+
+\end{document}
