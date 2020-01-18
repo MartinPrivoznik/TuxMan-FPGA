@@ -3,10 +3,13 @@
 \usepackage[utf8x]{inputenc} 	
 \usepackage[czech]{babel}
 \usepackage{pdfpages}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{datetime}
 \usepackage{titlesec}
+
+\graphicspath{ {./Schematics/} }
 \newcommand*\wildcard[2][5cm]{\vspace*{2cm}\parbox{#1}{\hrulefill\par#2}}  
 
 \title{TuxMan - FPGA}
@@ -60,8 +63,31 @@ V této sekci se věnuji tomu, co je číslicový obvod a jak jej navrhnout jak 
 \subsection{Kombinační obvody}\label{sec:kombinacniobvody}
 
 \subsubsection{Booleovská funkce}
-Booleovská funkce je funkce $N$ vstupů a $M$ výstupů nad množinou $\{0, 1\}$. V případě, kdy má funkce více jak jeden výstup, lze ji rozdělit na $M$ funkcí s jedním výstupem. Pro její reprezentaci můžeme využít kombinatorické struktury, které funkci vyjadřují. Příkladem reprezentace je pravdivostní tabulka, viz. tabulka~\ref{tab:andtable}, kde $in_1$ a $in_2$ jsou vstupní hodnoty a $out$ je výstupní.
-\begin{table}[!htbp]
+Booleovská funkce je funkce $N$ vstupů a $M$ výstupů nad množinou $\{0, 1\}$. V případě, kdy má funkce více jak jeden výstup, lze ji rozdělit na $M$ funkcí s jedním výstupem. Uvážíme-li Booleovu algebru, platí pro operace sčítání a násobení pravidla uvedená v tabulce~\ref{tab:pravidla}. 
+\begin{table}
+\centering
+\begin{tabular}{ c c c } 
+	$a+ b = b + a$ & $a*b = b*a$ & (komutativita) \\
+	$a+(b+c) = (a+b) + c$ & $a*(b*c) = (a*b)*c$ & (asociativita) \\
+	$a+(b*c) = (a+b) * (a+c)$ & $a*(b+c) = (a*b) + (a*c)$ & (distributivita) \\
+	$a+0 = a$ & $a*1 = a$ & (neutralita 0 a 1) \\
+	$a + \overline{a} = 1$ & $a * \overline{a} = 0$ & (vlastnosti negace) \\
+\end{tabular}
+    \caption{Axiomy a vztahy Booleovy algebry.\cite{boole1854investigation}}
+    \label{tab:pravidla}
+\end{table}
+Operace se dvěma vstupními hodnotami nazýváme binární operace. Některé binární operace, přestože často používají stejná značení + a * jako v algebře reálných čísel, mají v Booleově algebře stejnou prioritu a jiný význam (žádná operace nemá přednost)~\cite{kubatova}. Pro logický součet a logický součin platí základní pravidla v tabulce~\ref{tab:pravidlaboolalgebry}.
+\begin{table}
+\centering
+\begin{tabular}{ c c c } 
+	de Morgan & $\overline{(a+b)} = \overline{a} * \overline{b}$ & $\overline{(a*b)} = \overline{a} + \overline{b}$ \\
+	idempotence & $a + a = a$ & $a * a = a$ \\
+\end{tabular}
+    \caption{Základní pravidla Booleovy algebry.\cite{kubatova}}
+    \label{tab:pravidlaboolalgebry}
+\end{table}
+Příkladem reprezentace Booleovské funkce je pravdivostní tabulka~\ref{tab:andtable}, kde $in_1$ a $in_2$ jsou vstupní hodnoty a $out$ je výstupní. 
+\begin{table}
 \centering
 \begin{tabular}{ |c|c|c| } 
    	\hline
@@ -79,9 +105,8 @@ Booleovská funkce je funkce $N$ vstupů a $M$ výstupů nad množinou $\{0, 1\}
     \caption{Pravdivostní tabulka.}
     \label{tab:andtable}
 \end{table}
-Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnotu pro všechny možné kombinace vstuních hodnot. Dalším podstatným příkladem je Booleovská formule. K vyjádření formule a zároveň k popisu booleovské funkce používáme nejčastěji tyto základní funkce, viz. tabulka~\ref{tab:logickefunkce}
-
-\begin{table}[!htbp]
+Pravdivostní tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnotu pro všechny možné kombinace vstupních hodnot. Další možností je Booleovská formule~.\cite{kubatova}. K vyjádření formule a k popisu booleovské funkce používáme nejčastěji základní funkce uvedené v tabulce~\ref{tab:logickefunkce}
+\begin{table}
 \centering
 \begin{tabular}{ |c|c|c| } 
    	\hline
@@ -153,7 +178,7 @@ Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnot
 	   	\hline
 	\end{tabular} & $out = \overline{in_1}$ \\
 	\hline
-	YES (opakovač) & \begin{tabular}{ |c|c| } 
+	BUFFER (opakovač) & \begin{tabular}{ |c|c| } 
 	   	\hline
 		$in_1$ & $out$ \\
 	   	\hline
@@ -163,7 +188,7 @@ Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnot
 	   	\hline
 	\end{tabular} & $out = in_1$ \\
 	\hline
-	XOR (exkluzivní logický součet) & \begin{tabular}{ |c|c|c| } 
+	XOR (nonekvivalence) & \begin{tabular}{ |c|c|c| } 
 	   	\hline
 		$in_1$ & $in_2$ & $out$ \\
 	   	\hline
@@ -177,7 +202,7 @@ Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnot
 	   	\hline
 	\end{tabular} & $out = in_1 \oplus in_2$ \\
 	\hline
-	XNOR (negovaný exkluzivní logický součet) & \begin{tabular}{ |c|c|c| } 
+	XNOR (ekvivalence) & \begin{tabular}{ |c|c|c| } 
 	   	\hline
 		$in_1$ & $in_2$ & $out$ \\
 	   	\hline
@@ -195,20 +220,24 @@ Tato tabulka obsahuje vždy $N^2$ řádků, aby reprezentovala výstupní hodnot
     \caption{Tabulka nejpoužívanějších základních logických funkcí.}
     \label{tab:logickefunkce}
 \end{table}
-Uvážíme-li Booleovu algebru, platí pro OR a AND následující (tabulka~\ref{tab:pravidla})
-\begin{table}[h]
+\subsubsection{Číslicový obvod}
+Číslicový obvod je takový obvod, který realizuje Booleovskou funkci. Jeho reprezentací je schéma číslicového obvodu, kde každá z funkcí je reprezentována tzv. schématickou značkou. Schématické značky mohou být různé, dokud z nich jasně vyplívá, jakou Booleovskou funkci zastupují. Nejčastěji používané normy schématických značek jsou evropská a americká. Příklady schématických značek pro nejpoužívanější logické funkce jsou uvedené v tabulce~\ref{tab:functionschemes}. 
+\begin{table}
 \centering
-\begin{tabular}{ c c c } 
-	$a+ b = b + a$ & $a*b = b*a$ & (komutativita) \\
-	$a+(b+c) = (a+b) + c$ & $a*(b*c) = (a*b)*c$ & (asociativita) \\
-	$a+(b*c) = (a+b) * (a+c)$ & $a*(b+c) = (a*b) + (a*c)$ & (distributivita) \\
-	$a+0 = a$ & $a*1 = a$ & (neutralita 0 a 1) \\
-	$a + \overline{a} = 1$ & $a * \overline{a} = 0$ & (vlastnosti negace) \\
+\begin{tabular}{ c c } 
+	AND & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/AND.png}} \\
+	NAND & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/NAND.png}} \\
+	OR & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/OR.png}} \\
+	NOR & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/NOR.png}} \\
+	NOT & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/NOT.png}} \\
+	BUFFER & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/BUFFER.png}} \\
+	XOR & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/XOR.png}} \\
+	XNOR & \raisebox{-0.4\height}{\includegraphics[scale=0.6]{/Gates/XNOR.png}} \\
 \end{tabular}
-    \caption{Tahle tabulka by měla být pod textem "platí pro OR a AND následující:".}
-    \label{tab:pravidla}
+    \caption{Schématické značky některých nejpouživanějších základních logických funkcí (americká norma ANSI)}
+    \label{tab:functionschemes}
 \end{table}
-
+Pro usnadnění práce můžeme využívat logických bloků, které mají danou funkci. Opět platí, že ze značení logických bloků ve schématu musí plně vyplívat, jakou funkci reprezentují. Logický blok, který má definovanou funkci může být použit schématu. Při návrhu číslicových obvodů využíváme hierarchie, kde jsou pro každý logický blok popsány vstupy i výstupy a v případě, kdy se nejedná o známé definované logické bloky, tak je popsána i funkce (formule, pravdivostní tabulka, nebo schéma bloku).
 
 \subsection{Sekvenční obvody}\label{sec:sekvencniobvody}
 \subsection{Synchronní a asynchronní návrh}\label{sec:synchronniaasynchronninavrh}
@@ -270,11 +299,9 @@ V této sekci popisuji číslicový obvod, který zajišťuje vnitřní funkcion
 \chapter{Testování}
 
  \chapter*{Závěr}
-
-\begin{thebibliography}{9}
-\bibitem{Kubatova} 
-\end{thebibliography}
-
  \addcontentsline{toc}{section}{Závěr}
+
+\bibliographystyle{ieeetran}
+\bibliography{bibfile}
 
 \end{document}
