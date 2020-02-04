@@ -9,7 +9,6 @@
 \usepackage{datetime}
 \usepackage{titlesec}
 \usepackage{interval}
-\usepackage{multirow}
 
 \graphicspath{ {./Schematics/} }
 \newcommand*\wildcard[2][5cm]{\vspace*{2cm}\parbox{#1}{\hrulefill\par#2}}  
@@ -243,7 +242,7 @@ Pro usnad\-nění práce můžeme využívat logických bloků, které plní dan
 Zřetězením dvou polovičních sčítaček a přenesením pomocí funkce OR získáme poté kompletní sčítačku, viz obrázek~\ref{fig:fulladder}.\cite{kubatova}
 \begin{figure}
 \centering
-\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/FullAdder.pdf}
+\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/FullAdder.png}
 \caption{Schéma kompletní sčítačky a příklad jejího značení ve schématu.}
 \label{fig:fulladder}
 \end{figure}
@@ -251,96 +250,20 @@ Kompletní sčítačka umí sečíst jednobitová čísla, vygenerovat bit do vy
 Pro porovnávání dvou hodnot a vyhodnocení jejich nerovnosti používáme tzv. komparátor, viz obrázek~\ref{fig:comparator}. 
 \begin{figure}
 \centering
-\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/Comparator.pdf}
-\caption{Schéma komparátoru a příklad jeho značení ve schématu.}
+\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/Comparator.png}
+\caption{Schéma komparátoru a příklad jejího značení ve schématu}
 \label{fig:comparator}
 \end{figure}
 Dalším důležitým základním logickým blokem je multiplexor, viz obrázek~\ref{fig:mux}.
 \begin{figure}
 \centering
-\includegraphics[width=0.6\columnwidth]{/LogicalBlocks/Mux.pdf}
-\caption{Schématická značka multiplexoru.}
+\includegraphics{/LogicalBlocks/Mux.pdf}
+\caption{Schématická značka multiplexoru}
 \label{fig:mux}
 \end{figure}
-Multiplexor na základě řídícího vstupu/řídících vstupů ($a$) přivádí na výstup ($out$) jeden ze vstupních signálů ($x$). \par
-Číslicový obvod lze realizovat například z integrovaných obvodů, v nichž bývají hradla realizována z několika tranzistorů. Logické hodnoty představuje napětí přivedené na obvod. Logická $1$ bývá reprezentována  napětím kladným a logická $0$ napětím nulovým.
+Multiplexor na základě řídícího vstupu/řídících vstupů ($a$) přivádí na výstup ($out$) jeden ze vstupních signálů ($x$). Číslicový obvod lze realizovat například z integrovaných obvodů, v nichž bývají hradla realizována z několika tranzistorů. Logické hodnoty představuje napětí přivedené na obvod. Logická $1$ bývá reprezentována  napětím vyšším než 3,3 Voltů a logická $0$ napětím nižším.
 
 \subsection{Sekvenční obvody}\label{sec:sekvencniobvody}
-\subsubsection{Sekvenční logický obvod}
-Sekvenční logický obvod je takový obvod, ve kterém výstupní hodnoty nejsou dány pouze aktuální kombinací vstupních proměnných, ale zároveň předchozím stavem. Sekvenční obvod si tedy musí zapamatovat předchozí hodnoty pomocí paměti, která bývá realizována pomocí zpětné vazby~\cite{kubatova}. Sekvenční obvod se dělí na dvě části - kombinační a paměťovou, kde paměťová část je tvořena kombinačním obvodem, ve kterém bývá zavedena zpětná vazba a kombinační část bývá tvořena typickým kombinačním obvodem. Obecné schéma konečného automatu je na obrázku~\ref{fig:seqcircuit}. \par
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/sqcircuit.pdf}
-\caption{Huffmanův model konečného automatu.}
-\label{fig:seqcircuit}
-\end{figure}
-Příkladem kombinačního obvodu se zpětnou vazbou může být tzv. RS klopný obvod, viz obrázek~\ref{fig:rsko}.
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/RSKO.pdf}
-\caption{Schéma RS klopného obvodu s využitím logických hradel NOR.}
-\label{fig:rsko}
-\end{figure}
-RS klopný obvod překlápí mezi dvěma mezními hodnotami. Pravdivostní tabulka RS klopného obvodu se může dělit na tři části - zakázaný stav (ZS), překlápěcí část a paměť, viz tabulka~\ref{tab:rskotab}.
-\begin{table}
-\centering
- \begin{tabular}{ |c c|c c| } 
-   	\hline
-	$A$ & $B$ & $Q$ & $Q'$ \\
-   	\hline
-	$0$ & $0$ & \multicolumn{2}{c|}{ZS} \\
-	$0$ & $1$ & $0$ & $1$\\
-	$1$ & $0$ & $1$ & $0$\\
-	$1$ & $1$ & \multicolumn{2}{c|}{Paměť}\\
-   	\hline
-\end{tabular}
-	\caption{Pravdivostní tabulka RS klopného obvodu s využitím NOR.}
-	\label{tab:rskotab}
-\end{table}
-Pokud se tedy změní vstupní hodnoty z $[0,1]$, nebo $[1,0]$ na $[1,1]$, na výstupu bude předchozí hodnota, dokud neproběhne další změna vstupních hodnot. Častěji využívaným klopným obvodem je tzv. D klopný obvod, viz obrázek~\ref{fig:dko}.
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/DKO.pdf}
-\caption{Schéma D klopného obvodu.}
-\label{fig:dko}
-\end{figure}
-Výhodou D klopného obvodu je fakt, že narozdíl od RS klopného obvodu nemá zakázaný stav, viz pravdivostní tabulka~\ref{tab:dkotab}.
-\begin{table}
-\centering
- \begin{tabular}{ |c c|c c| } 
-   	\hline
-	$T$ & $D$ & $Q$ & $Q'$ \\
-   	\hline
-	$0$ & $0$ & \multicolumn{2}{c|}{\multirow{2}{*}{Paměť}} \\
-	$0$ & $1$ & \multicolumn{2}{c|}{}\\
-	$1$ & $0$ & $0$ & $1$\\
-	$1$ & $1$ & $1$ & $0$\\
-   	\hline
-\end{tabular}
-	\caption{Pravdivostní tabulka D klopného obvodu.}
-	\label{tab:dkotab}
-\end{table}
-Signál $T$ u D klopného obvodu se dá považovat za tzv. povolovací signál. Pokud na $T$ přijde sestupná hrana (změna stavu z logické $1$ na logickou $0$), tak na výstupu $Q$ zůstane předchozí hodnota signálu $D$. Při náběžné hraně na $T$  (změna stavu z logické $0$ na logickou $1$) se na výstup $Q$ zapíše aktuální hodnota na signálu $D$. Příkladem značení D klopného obvodu je na obrázku~\ref{fig:dblock}.
-\begin{figure}
-\centering
-\includegraphics[width=0.4\columnwidth]{/LogicalBlocks/DBlock.pdf}
-\caption{Příklad značení D klopného obvodu ve schématu.}
-\label{fig:dblock}
-\end{figure}
-Vstupní signál označený trojúhelníkem je signál T. Trojúhelník mířící směrem do "krabičky" značí, že obvod mění výstupní hodnotu v reakci na náběžnou hranu na vstupu s tímto trojúhelníkem. Pokud má číslicový obvod takový vstup, je zřejmé, že se jedná o sekvenční obvod. \par
-Příkladem sekvenčního logického bloku je čítač. Čítač je takový sekvenční logický obvod, který uchovává v ,,paměti" informaci o tom, kolikrát zaznamenal změnu stavu (dle návrhu náběžná, nebo sestupná hrana) na vstupním signálu.
-\subsubsection{Časové průběhy}
-Časový průběh je grafické znázornění pravdivostní tabulky. Dá se popsat tzv. časovým diagramem. Časový diagram popisuje, jaké logické hodnoty nabývá daný signál v jaký čas. Příklad časového diagramu je na obrázku~\ref{fig:dkotd}.
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{/TimeDiagrams/DFlipFlop.pdf}
-\caption{Časový diagram D klopného obvodu.}
-\label{fig:dkotd}
-\end{figure}
-\subsubsection{Konečný automat}
-Konečný automat (angl. Finite State Machine - FSM) je matematickým modelem sekvenčního obvodu. Má definované stavy, mezi kterými za daných podmínek přepíná a mění svůj výstup. Variantu konečného automatu můžeme volit v případě, kdy se setkáváme s náročnějším sekvenčním obvodem. Konečný automat musí popisovat přechodové funkce (podmínky pro změnu stavu a do kterého) a výstupní funkce (jaký signál v danou chvíli udává na výstup). Příklady možných návrhů konečných automatů jsou Mealyho návrh a Moorův návrh. Mealyho návrh FSM ....
-
-
 \subsection{Synchronní a asynchronní návrh}\label{sec:synchronniaasynchronninavrh}
 \subsection{Jazyk VHDL}\label{sec:jazykvhdl}
 
