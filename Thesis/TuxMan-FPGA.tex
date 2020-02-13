@@ -10,6 +10,9 @@
 \usepackage{titlesec}
 \usepackage{interval}
 \usepackage{multirow}
+\usepackage{tikz-timing}
+\usepackage{tikz}
+\usepackage{listings}
 
 \graphicspath{ {./Schematics/} }
 \newcommand*\wildcard[2][5cm]{\vspace*{2cm}\parbox{#1}{\hrulefill\par#2}}  
@@ -267,14 +270,14 @@ Multiplexor na základě řídícího vstupu/řídících vstupů ($a$) přivád
 
 \subsection{Sekvenční obvody}\label{sec:sekvencniobvody}
 \subsubsection{Sekvenční logický obvod}
-Sekvenční logický obvod je takový obvod, ve kterém výstupní hodnoty nejsou dány pouze aktuální kombinací vstupních proměnných, ale zároveň předchozím stavem. Sekvenční obvod si tedy musí zapamatovat předchozí hodnoty pomocí paměti, která bývá realizována pomocí zpětné vazby~\cite{kubatova}. Sekvenční obvod se dělí na dvě části - kombinační a paměťovou, kde paměťová část je tvořena kombinačním obvodem, ve kterém bývá zavedena zpětná vazba a kombinační část bývá tvořena typickým kombinačním obvodem. Obecné schéma konečného automatu je na obrázku~\ref{fig:seqcircuit}. \par
+Sekvenční logický obvod je takový obvod, ve kterém výstupní hodnoty nejsou dány pouze aktuální kombinací vstupních proměnných, ale zároveň předchozím stavem. Sekvenční obvod si tedy musí zapamatovat předchozí hodnoty pomocí paměti, která bývá realizována pomocí zpětné vazby~\cite{kubatova}. Sekvenční obvod se dělí na dvě části - kombinační a paměťovou, kde paměťová část je tvořena logickým obvodem, ve kterém bývá zavedena zpětná vazba a kombinační část bývá tvořena kombinačním obvodem. Obecné schéma sekvenčního obvodu je na obrázku~\ref{fig:seqcircuit}. \par
 \begin{figure}
 \centering
 \includegraphics[width=0.9\columnwidth]{/LogicalBlocks/sqcircuit.pdf}
-\caption{Huffmanův model konečného automatu.}
+\caption{Huffmanův model sekvenčního obvodu.}
 \label{fig:seqcircuit}
 \end{figure}
-Příkladem kombinačního obvodu se zpětnou vazbou může být tzv. RS klopný obvod, viz obrázek~\ref{fig:rsko}.
+Příkladem logického obvodu se zpětnou vazbou může být tzv. RS klopný obvod, viz obrázek~\ref{fig:rsko}.
 \begin{figure}
 \centering
 \includegraphics[width=0.9\columnwidth]{/LogicalBlocks/RSKO.pdf}
@@ -288,7 +291,7 @@ RS klopný obvod překlápí mezi dvěma mezními hodnotami. Pravdivostní tabul
    	\hline
 	$A$ & $B$ & $Q$ & $Q'$ \\
    	\hline
-	$0$ & $0$ & \multicolumn{2}{c|}{ZS} \\
+	$0$ & $0$ & \multicolumn{2}{c|}{Z.S.} \\
 	$0$ & $1$ & $0$ & $1$\\
 	$1$ & $0$ & $1$ & $0$\\
 	$1$ & $1$ & \multicolumn{2}{c|}{Paměť}\\
@@ -297,7 +300,7 @@ RS klopný obvod překlápí mezi dvěma mezními hodnotami. Pravdivostní tabul
 	\caption{Pravdivostní tabulka RS klopného obvodu s využitím NOR.}
 	\label{tab:rskotab}
 \end{table}
-Pokud se tedy změní vstupní hodnoty z $[0,1]$, nebo $[1,0]$ na $[1,1]$, na výstupu bude předchozí hodnota, dokud neproběhne další změna vstupních hodnot. Častěji využívaným klopným obvodem je tzv. D klopný obvod, viz obrázek~\ref{fig:dko}.
+Pokud se tedy změní vstupní hodnoty z $[0,1]$, nebo $[1,0]$ na $[1,1]$, na výstupu bude předchozí hodnota, dokud neproběhne další změna vstupních hodnot. Jedná se tedy o tzv. hladinový klopný obvod (angl. latch). Častěji využívaným klopným obvodem je tzv. D klopný obvod, viz obrázek~\ref{fig:dko}.
 \begin{figure}
 \centering
 \includegraphics[width=0.9\columnwidth]{/LogicalBlocks/DKO.pdf}
@@ -311,41 +314,159 @@ Výhodou D klopného obvodu je fakt, že narozdíl od RS klopného obvodu nemá 
    	\hline
 	$T$ & $D$ & $Q$ & $Q'$ \\
    	\hline
-	$0$ & $0$ & \multicolumn{2}{c|}{\multirow{2}{*}{Paměť}} \\
-	$0$ & $1$ & \multicolumn{2}{c|}{}\\
-	$1$ & $0$ & $0$ & $1$\\
-	$1$ & $1$ & $1$ & $0$\\
+	\texttiming{LH} & $x$ & $x$ & $\overline{x}$\\
+	\multicolumn{2}{|c|}{Jinak} & \multicolumn{2}{|c|}{Paměť}\\
    	\hline
 \end{tabular}
 	\caption{Pravdivostní tabulka D klopného obvodu.}
 	\label{tab:dkotab}
 \end{table}
-Signál $T$ u D klopného obvodu se dá považovat za tzv. povolovací signál. Pokud na $T$ přijde sestupná hrana (změna stavu z logické $1$ na logickou $0$), tak na výstupu $Q$ zůstane předchozí hodnota signálu $D$. Při náběžné hraně na $T$  (změna stavu z logické $0$ na logickou $1$) se na výstup $Q$ zapíše aktuální hodnota na signálu $D$. Příkladem značení D klopného obvodu je na obrázku~\ref{fig:dblock}.
+Signál $T$ u D klopného obvodu se dá považovat za tzv. povolovací signál. Při náběžné hraně na $T$  (změna stavu z logické $0$ na logickou $1$) se na výstup $Q$ zapíše aktuální hodnota na signálu $D$. V tomto případě se tedy jedná o hranový klopný obvod. Příklad značení D klopného obvodu je na obrázku~\ref{fig:dblock}.
 \begin{figure}
 \centering
 \includegraphics[width=0.4\columnwidth]{/LogicalBlocks/DBlock.pdf}
 \caption{Příklad značení D klopného obvodu ve schématu.}
 \label{fig:dblock}
 \end{figure}
-Vstupní signál označený trojúhelníkem je signál T. Trojúhelník mířící směrem do "krabičky" značí, že obvod mění výstupní hodnotu v reakci na náběžnou hranu na vstupu s tímto trojúhelníkem. Pokud má číslicový obvod takový vstup, je zřejmé, že se jedná o sekvenční obvod. \par
-Příkladem sekvenčního logického bloku je čítač. Čítač je takový sekvenční logický obvod, který uchovává v ,,paměti" informaci o tom, kolikrát zaznamenal změnu stavu (dle návrhu náběžná, nebo sestupná hrana) na vstupním signálu.
-\subsubsection{Časové průběhy}
-Časový průběh je grafické znázornění pravdivostní tabulky. Dá se popsat tzv. časovým diagramem. Časový diagram popisuje, jaké logické hodnoty nabývá daný signál v jaký čas. Příklad časového diagramu je na obrázku~\ref{fig:dkotd}.
+Vstupní signál označený trojúhelníkem je signál T. Trojúhelník značí, že obvod mění výstupní hodnotu v reakci na náběžnou hranu. Tento vstup se jinak nazývá hodinovým vstupem. Pokud má číslicový obvod takový vstup jedná se o sekvenční obvod. V případě hladinového obvodu by ve značení byl místo trojúhelníku čtverec. \par
+Hodnoty na signálech se dají popsat tzv. časovým diagramem. Časový diagram popisuje, jaké logické hodnoty nabývá daný signál v jaký čas. Příklad časového diagramu je na obrázku~\ref{fig:dkotd}.
 \begin{figure}
 \centering
-\includegraphics[width=0.9\columnwidth]{/TimeDiagrams/DFlipFlop.pdf}
+\includegraphics[width=0.6\columnwidth]{/TimeDiagrams/DFlipFlop.pdf}
 \caption{Časový diagram D klopného obvodu.}
 \label{fig:dkotd}
 \end{figure}
-\subsubsection{Konečný automat}
-Konečný automat (angl. Finite State Machine - FSM) je matematickým modelem sekvenčního obvodu. Má definované stavy, mezi kterými za daných podmínek přepíná a mění svůj výstup. Variantu konečného automatu můžeme volit v případě, kdy se setkáváme s náročnějším sekvenčním obvodem. Konečný automat musí popisovat přechodové funkce (podmínky pro změnu stavu a do kterého) a výstupní funkce (jaký signál v danou chvíli udává na výstup). Příklady možných návrhů konečných automatů jsou Mealyho návrh a Moorův návrh. Mealyho návrh FSM ....
+\par
+Příkladem sekvenčního logického bloku je čítač. Čítač je takový sekvenční logický obvod, který uchovává v ,,paměti" informaci o tom, kolikrát zaznamenal změnu stavu (dle návrhu náběžnou, nebo sestupnou hrana) na hodinovém signálu. Příklad schématu čítače je na obrázku~\ref{fig:counter}.
+\begin{figure}
+\centering
+\includegraphics[width=0.7\columnwidth]{/LogicalBlocks/Counter.pdf}
+\caption{Příklad schématu dvoubitového čítače reagujícího na náběžnou hranu.}
+\label{fig:counter}
+\end{figure}
+Může být ve schématu značen, jako na obrázku~\ref{fig:counterbox}.
+\begin{figure}
+\centering
+\includegraphics[width=0.4\columnwidth]{/LogicalBlocks/Counterbox.pdf}
+\caption{Příklad schématické značky dvoubitového čítače reagujícího na náběžnou hranu.}
+\label{fig:counterbox}
+\end{figure}
+\subsubsection{Konečný stavový automat}
+Konečný stavový automat (angl. Finite State Machine - FSM) M je šestice M=(Q, T, D, delta, lambda, q0), kde:
+\begin{itemize}
+  \item Q je konečná množina vnitřních stavů
+  \item T je konečná množina vstupních symbolů (signálů)
+  \item D je konečná množina výstupních symbolů (signálů)
+  \item delta je zobrazení z Q x T do Q (stav x vstup do stav) nazývané přechodová funkce
+  \item lambda je zobrazení z Q x T do D (Mealy, ze stavu a vstupu do výstupu) nebo Q do D (Moore, jen ze stavu do výstupu)
+  \item q0 je počáteční stav
+\end{itemize}
+~\cite{jazykyapreklady} Má definované stavy, mezi kterými za daných podmínek přepíná a mění svůj výstup. FSM provádí vždy právě jeden přechod s každou náběžnou hranou hodin. Musí popisovat přechodovou funkci (podmínky pro změnu stavu a do kterého), výstupní funkci (jaký signál v danou chvíli udává na výstup) a dále musí mít definovaný počátečný stav. Příklad stavového diagramu FSM je na obrázku~\ref{fig:fsmexample}, kde $a, b, c$ jsou podmínky pro změnu stavu a $q1, q2, q3$ jsou stavy FSM. Počáteční stav je značen šipkou, která nevychází z žádného stavu, v tomto případě $q1$.
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[scale=0.2]
+\tikzstyle{every node}+=[inner sep=0pt]
+\draw [black] (22.4,-28.4) circle (3);
+\draw (22.4,-28.4) node {$q1$};
+\draw [black] (39.9,-28.4) circle (3);
+\draw (39.9,-28.4) node {$q2$};
+\draw [black] (57.8,-28.4) circle (3);
+\draw (57.8,-28.4) node {$q3$};
+\draw [black] (25.4,-28.4) -- (36.9,-28.4);
+\fill [black] (36.9,-28.4) -- (36.1,-27.9) -- (36.1,-28.9);
+\draw (31.15,-27.9) node [above] {$a$};
+\draw [black] (42.9,-28.4) -- (54.8,-28.4);
+\fill [black] (54.8,-28.4) -- (54,-27.9) -- (54,-28.9);
+\draw (48.85,-27.9) node [above] {$b$};
+\draw [black] (55.587,-30.423) arc (-51.04855:-128.95145:24.636);
+\fill [black] (24.61,-30.42) -- (24.92,-31.31) -- (25.55,-30.54);
+\draw (40.1,-36.4) node [below] {$c$};
+\draw [black] (15.5,-28.4) -- (19.4,-28.4);
+\fill [black] (19.4,-28.4) -- (18.6,-27.9) -- (18.6,-28.9);
+\end{tikzpicture}
+\end{center}
+\caption{Příklad stavového diagramu konečného stavového automatu.}
+\label{fig:fsmexample}
+\end{figure}
+Rozeznáváme dva typy FSM na základě definičního oboru výstupní funkce~\cite{kubatova}. Prvním typem je typ Mealy (angl. často input-based), který mění svůj výstup na základě aktuálního stavu a změn na vstupních signálech. Druhý je typ Moore (angl. často state-based), jehož výstupní funkce je závislá pouze na aktuálním stavu (každý stav má definovaný výstup). Příkladem stavového diagramu čítače modulo 4 s povolujícím vstupem je obrázek~\ref{fig:counterfsm}
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[scale=0.2]
+\tikzstyle{every node}+=[inner sep=0pt]
+\draw [black] (30.5,-22.2) circle (3);
+\draw (30.5,-22.2) node {$q0/00$};
+\draw [black] (53.2,-22.2) circle (3);
+\draw (53.2,-22.2) node {$q1/01$};
+\draw [black] (53.2,-41.8) circle (3);
+\draw (53.2,-41.8) node {$q2/10$};
+\draw [black] (30.5,-41.8) circle (3);
+\draw (30.5,-41.8) node {$q3/11$};
+\draw [black] (31.931,-19.572) arc (144.37918:35.62082:12.202);
+\fill [black] (51.77,-19.57) -- (51.71,-18.63) -- (50.9,-19.21);
+\draw (41.85,-13.98) node [above] {$CE\mbox{ }=\mbox{ }1$};
+\draw [black] (55.984,-23.288) arc (60.10415:-60.10415:10.049);
+\fill [black] (55.98,-40.71) -- (56.93,-40.75) -- (56.43,-39.88);
+\draw (61.52,-32) node [right] {$CE\mbox{ }=\mbox{ }1$};
+\draw [black] (19.5,-22.2) -- (27.5,-22.2);
+\draw (19,-22.2) node [left] {$reset$};
+\fill [black] (27.5,-22.2) -- (26.7,-21.7) -- (26.7,-22.7);
+\draw [black] (51.63,-44.348) arc (-38.52063:-141.47937:12.5);
+\fill [black] (32.07,-44.35) -- (32.18,-45.29) -- (32.96,-44.66);
+\draw (41.85,-49.56) node [below] {$CE\mbox{ }=\mbox{ }1$};
+\draw [black] (27.936,-40.262) arc (-129.04509:-230.95491:10.637);
+\fill [black] (27.94,-23.74) -- (27,-23.85) -- (27.63,-24.63);
+\draw (23.5,-32) node [left] {$CE\mbox{ }=\mbox{ }1$};
+\draw [black] (33.287,-23.278) arc (96.59379:-191.40621:2.25);
+\draw (38.43,-27.66) node [below] {$CE\mbox{ }=\mbox{ }0$};
+\fill [black] (31.34,-25.07) -- (30.94,-25.92) -- (31.93,-25.81);
+\draw [black] (54.87,-19.722) arc (173.74488:-114.25512:2.25);
+\draw (59.72,-17.63) node [right] {$CE\mbox{ }=\mbox{ }0$};
+\fill [black] (56.18,-22.02) -- (56.92,-22.6) -- (57.03,-21.61);
+\draw [black] (55.834,-43.212) arc (89.53768:-198.46232:2.25);
+\draw (60.47,-47.79) node [below] {$CE\mbox{ }=\mbox{ }0$};
+\fill [black] (53.68,-44.75) -- (53.17,-45.55) -- (54.17,-45.55);
+\draw [black] (29.391,-44.575) arc (5.94318:-282.05682:2.25);
+\draw (24.94,-47.77) node [left] {$CE\mbox{ }=\mbox{ }0$};
+\fill [black] (27.62,-42.61) -- (26.78,-42.19) -- (26.88,-43.19);
+\end{tikzpicture}
+\end{center}
+\caption{Příklad stavového diagramu (typ Moore) čítače modulo 4 se vstupem count enable.}
+\label{fig:counterfsm}
+\end{figure}
 
-
-\subsection{Synchronní a asynchronní návrh}\label{sec:synchronniaasynchronninavrh}
+\subsection{Synchronní návrh}\label{sec:synchronniaasynchronninavrh}
+\subsubsection{Pravidla návrhu synchronního obvodu}
+Synchronní obvod je takový obvod, ve kterém všechny sekvenční části obvodu mají na svůj hodinový vstup přivedený stejný signál, aby měnily svůj stav ve stejný čas. Tento signál můžeme nazývat společné hodiny. Společné hodiny mění svůj stav na dané frekvenci (nejčastěji dle krystalu v obvodu). Tuto část obvodu můžeme nazývat hodinová doména. Pro návrh synchronního návrhu platí několik pravidel, které je nutné dodržet pro správnost návrhu. Společné hodiny nesmí být hradlované (signál musí být přiveden přímo k hodinovým vstupům sekvenčních obvodů). V případě hradlování společných hodin může docházet k časovým rezervám v jednotlivých částech obvodu. Dále je nutné, aby obvod obsahoval synchronní reset. Po synchronním resetu obvodu změní stav celý obvod společně a nedojde k časovým nesrovnalostem. \par
+Při návrhu se nemusí vždy pracovat pouze s jednou hodinovou doménou. V tomto případě je nutné společné hodiny synchronizovat specializovaným obvodem, který můžeme nazývat synchronizér. Synchronizér se může skládat z D klopných obvodů, které mají dané podmínky pro korektní funkci. Vstupní hodnota D klopného obvodu nesmí být změněna krátce před příchodem náběžné hrany na hodinovém vstupu (tj. předstih). Zároveň nesmí být změněna těsně po příchodu náběžné hrany na hodinovém vstupu (tj. přesah). V případě porušení těchto podmínek se může stát, že klopný obvod bude mít abnormálně zpožděnou, nebo kolísavou odezvu. Příklad synchronizéru je na obrázku\ref{fig:synchronizer}.
+\begin{figure}
+\centering
+\caption{Příklad návrhu synchronizéru.}
+\label{fig:synchronizer}
+\end{figure}
+\par
+Datové signály jsou řízené řídícími signály synchronizéru. Protokol řídících signálů musí být navržen tak, aby se měnil vždy jen jeden. Řídící signál můžeme nazývat strobe. Úkolem tohoto protokolu je indikace, zda jsou data aktuální (tj. na signálu strobe bude logická $1$, dokud nezačne opět probíhat příchod nových dat).
 \subsection{Jazyk VHDL}\label{sec:jazykvhdl}
+\subsubsection{Charakteristika jazyka VHDL}
+VHDL (VHSIC (Very-High-Speed Integrated Circuit, česky velmi rychlý integrovaný obvod) Hardware Description Language) je programovací jazyk sloužící pro popis hardware (tj. Hardware Description Language, zkr. HDL, česky jazyk popisující hardware). Používá se pro návrh digitálních integrovaných obvodů, např. u FPGA (Field of Programmable Gate Array, česky programovatelná hradlová pole). VHDL je silně typovaný jazyk a umožňuje popsat obvod na hradlové, RTL (Register Transfer Level, česky přenos na úrovni registrů) i algoritmické úrovni.
+\subsubsection{Základní konstrukce}
+Konstrukce jazyka VHDL se dělí na několik částí. Jednou z nich je tzv. Entita. Entita popisuje pouze rozhraní, nikoliv chování, nebo vnitřní strukturu návrhu. Obsahuje tedy definici vstupních a výstupních portů. Příklad návrhu entity multiplexoru je na obrázku~\ref{fig:entityexample}.
+\begin{figure}
+\centering
+\includegraphics[width=0.9\columnwidth]{/VHDL/EntityExample.png}
+\caption{Příklad návrhu entity multiplexoru.}
+\label{fig:entityexample}
+\end{figure}
+Další částí je architektura. Architektura obsahuje chování a vnitřní strukturu entity. Architektura tedy musí být definována uvnitř entity a nelze, aby fungovala samostatně. Entita může obsahovat více architektur. Příklad definice architektury :
+\begin{lstlisting}[language=VHDL]
+architecture example of entity_example is
+begin
+
+end example;
+\end{lstlisting}
+Architektura se poté dělí na dvě části. Deklarační a sekci paralelních příkazů. Deklarační část se nachází před klíčovým slovem begin a je vyhrazena pro deklaraci signálů, konstant, nebo typů. Součástí sekce paralelních příkazů může být instance koponent, behaviorální popis (tj. popis chování), nebo tzv. procesy a nachází se v tělě architektury (tj. část za klíčovým slovem begin).  
 
 \section{Programovatelná hradlová pole FPGA}\label{sec:fpga}
-Tato sekce se zabývá tím, co jsou programovatelná hradlová pole (Field of programmable gate array, FPGA) a jak probíhá práce s těmito hradlovými poli na vývojové desce. V podsekci~\ref{sec:dostupneprostredky} popisuji části FPGA, které jsou použity pro implementaci číslicového obvodu. Podsekce~\ref{sec:logickasynteza} stručně vysvětluje kroky nezbytné pro implementaci samotného číslicového obvodu na základě jeho popisu VHDL kódem. V podsekcích \ref{sec:basys2} a \ref{sec:xilinxise} je stručně popsána použitá vývojová deska a vývojové prostředí, které se váže k FPGA, které deska obsahuje.
+Tato sekce se zabývá tím, co jsou programovatelná hradlová pole (Field of programmable gate array, FPGA) a jak probíhá práce s těmito hradlovými poli na vývojové desce. V podsekci~\ref{sec:dostupneprostredky} popisuji části FPGA, které jsou použity pro implementaci číslicového obvodu. Podsekce~\ref{sec:logickasynteza} stručně vysvětluje kroky nezbytné pro implementaci samotného číslicového obvodu na základě jeho popisu VHDL kódem. V podsekcích~\ref{sec:basys2} a \ref{sec:xilinxise} je stručně popsána použitá vývojová deska a vývojové prostředí, které se váže k FPGA, které deska obsahuje.
 
 \subsection{Dostupné prostředky}\label{sec:dostupneprostredky}
 \subsection{Logická syntéza}\label{sec:logickasynteza}
