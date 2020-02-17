@@ -448,22 +448,58 @@ Datové signály jsou řízené řídícími signály synchronizéru. Protokol �
 \subsection{Jazyk VHDL}\label{sec:jazykvhdl}
 \subsubsection{Charakteristika jazyka VHDL}
 VHDL (VHSIC (Very-High-Speed Integrated Circuit, česky velmi rychlý integrovaný obvod) Hardware Description Language) je programovací jazyk sloužící pro popis hardware (tj. Hardware Description Language, zkr. HDL, česky jazyk popisující hardware). Používá se pro návrh digitálních integrovaných obvodů, např. u FPGA (Field of Programmable Gate Array, česky programovatelná hradlová pole). VHDL je silně typovaný jazyk a umožňuje popsat obvod na hradlové, RTL (Register Transfer Level, česky přenos na úrovni registrů) i algoritmické úrovni.
+\subsubsection{Datové typy}
+VHDL je silně typovaný jazyk, při operacích je tedy nutné, aby se typy shodovaly. Jedny z důležitých základních datových typů jsou: , bit, integer, std\textunderscore logic a std\textunderscore logic\textunderscore vector, . 
+\begin{itemize}
+  \item Array - pole prvků jiného typu
+  \item Bit - Výčtový typ ('0', '1')
+  \item Integer - Celé číslo
+  \item Std\textunderscore logic - Popis signálu ('U’,'X', '0',  ‘1', 'Z', 'W',  'L', 'H', '-')
+  \item Std\textunderscore logic\textunderscore vector - Pole std\textunderscore logic
+  \item Signed - Bitový vektor, který nepopisuje stav signálu, ale pouze číselnou hodnotu
+  \item Unsigned - Signed, který může obsahovat pouze kladné hodnoty
+\end{itemize}
+
 \subsubsection{Základní konstrukce}
-Konstrukce jazyka VHDL se dělí na několik částí. Jednou z nich je tzv. Entita. Entita popisuje pouze rozhraní, nikoliv chování, nebo vnitřní strukturu návrhu. Obsahuje tedy definici vstupních a výstupních portů. Příklad návrhu entity multiplexoru je na obrázku~\ref{fig:entityexample}.
+Konstrukce jazyka VHDL se dělí na několik částí. Jednou z nich je tzv. entita. Entita popisuje pouze rozhraní, nikoliv chování, nebo vnitřní strukturu návrhu. Obsahuje tedy definici vstupních a výstupních portů. Příklad návrhu entity multiplexoru je na obrázku~\ref{fig:entityexample}.
 \begin{figure}
 \centering
 \includegraphics[width=0.9\columnwidth]{/VHDL/EntityExample.png}
 \caption{Příklad návrhu entity multiplexoru.}
 \label{fig:entityexample}
 \end{figure}
-Další částí je architektura. Architektura obsahuje chování a vnitřní strukturu entity. Architektura tedy musí být definována uvnitř entity a nelze, aby fungovala samostatně. Entita může obsahovat více architektur. Příklad definice architektury :
+Další částí je architektura. Architektura obsahuje chování a vnitřní strukturu entity. Architektura tedy musí být definována uvnitř entity a nelze, aby fungovala samostatně. Entita může obsahovat více architektur. Ta se poté dělí na dvě části. Deklarační a sekci paralelních příkazů. Deklarační část se nachází před klíčovým slovem begin a je vyhrazena pro deklaraci signálů, konstant, nebo typů. Součástí sekce paralelních příkazů může být instance koponent, behaviorální popis (tj. popis chování), nebo tzv. procesy a nachází se v tělě architektury (tj. část za klíčovým slovem begin). Příklad architektury výše uvedeného multiplexoru:
 \begin{lstlisting}[language=VHDL]
-architecture example of entity_example is
+architecture MUX_BODY of MULTIPLEXER is
+
+signal SELNON, ASEL, BSEL : std_logic;
+
 begin
 
-end example;
+SELNON <= not SEL;
+ASEL <= A and SELNON;
+BSEL <= B and SEL;
+Y <= ASEL or BSEL;
+
+end MUX_BODY;
 \end{lstlisting}
-Architektura se poté dělí na dvě části. Deklarační a sekci paralelních příkazů. Deklarační část se nachází před klíčovým slovem begin a je vyhrazena pro deklaraci signálů, konstant, nebo typů. Součástí sekce paralelních příkazů může být instance koponent, behaviorální popis (tj. popis chování), nebo tzv. procesy a nachází se v tělě architektury (tj. část za klíčovým slovem begin).  
+Proměnná označená klíčovým slovem signal značí stejnojmenný signál v obvodu. Klíčové slovo $std\textunderscore logic$ říká, že se jedná o jednobitový signál. V případě vícebitového signálu by bylo využito klíčové slovo $std\textunderscore logic\textunderscore vector$. Signál si pamatuje svou hodnotu, dokud není změněna dalším přiřazením. V části paralelních příkazů operátor $<=$ zastupuje operátor přiřazení. Hodnota z pravé strany je tedy po vyhodnocení logické operace přiřazena signálu na levé straně. Všechny logické operace v tomto případě jsou vyhodnocovány paralelně. Tato metoda se většinou využívá pro popis chování kombinačních obvodů. V případě popisu sekvenčního obvodu je nejčastěji využíván tzv. proces. Proces je součástí architektury a i přes to, že popisuje sekvenční obvod, tak běží souběžně. V sekvenčním popisu je možné krom operátorů přiřazení a logických operací využívat také podmínky, jako je např. $if$, nebo $case$. V případě psaní syntetizovatelného kódu proces obsahuje citlivostní seznam a opět popis chování. Citlivostní seznam je seznam signálů, na který sekvenční obvod reaguje (u sekvenčních obvodů hodinový vstup a synchronní reset). Příklad procesu, který popisuje D klopný obvod, kde $D$ je vstupní hodnota, $Q$ je výstupní, $clk$ jsou hodiny a $reset$ je synchronní reset:
+\begin{lstlisting}[language=VHDL]
+D_FLIP_FLOP : process (clk, reset)
+begin
+	if(clk'event and clk='1') then       
+		if(reset = '1') then
+			Q <= '0';
+		else 
+			Q <= D;
+		end if;
+	end if;
+end process;
+\end{lstlisting}
+Pokud na hodinách obvod zaznamená náběžnou hranu a není aktivní synchronní reset, tak na signál $Q$ zapíše aktuální hodnotu na signálu $D$. \par
+Celý obvod je možné popsat v rámci jedné entity, pro přehlednost je možné ale využívat componenty. Při návrhu většího obvodu je vhodné logicky oddělit části obvodů od sebe a vytvořit z nich entity, které je možné poté propojit v nadřazené entitě pomocí klíčového slova component a namapování vstupních a výstupních signálů jednotlivých entit pomocí příkazu port map. Při mapování je poté možné pouze přiřadit vstupní a výstupní signály k signálům v nadřazené entitě.  
+\subsubsection{Popis FSM}
+Jazyk VHDL nezná pojem automatu a existuje mnoho způsobů, jak jej popsat ve VHDL. Často používaný popis a zároveň takový, který usnadní práci logické syntéze programu je metoda se třemi procesy. Prvním procesem je přechodová funkce a jedná se o kombinační proces, který na základě vstupních hodnot vyhodnocuje, jaký bude příští stav FSM. Vstupy přechodové funkce jsou stavy a vstupy FSM a jejím výstupem je příští stav. Druhý proces je registr stavu, který je sekvenčním procesem. Jeho vstupem je příští stav a výstupem je nový aktuální stav. Poslední proces je kombinační proces zvaný výstupní funkce, který na základě aktuálního stavu a v případě návrhu Mealyho FSM i vstupních hodnot vyhodnocuje výstup FSM. Výstupní funkce má jako vstupy stav a dle návrhu i vstup FSM. Výstupem je výstup FSM.
 
 \section{Programovatelná hradlová pole FPGA}\label{sec:fpga}
 Tato sekce se zabývá tím, co jsou programovatelná hradlová pole (Field of programmable gate array, FPGA) a jak probíhá práce s těmito hradlovými poli na vývojové desce. V podsekci~\ref{sec:dostupneprostredky} popisuji části FPGA, které jsou použity pro implementaci číslicového obvodu. Podsekce~\ref{sec:logickasynteza} stručně vysvětluje kroky nezbytné pro implementaci samotného číslicového obvodu na základě jeho popisu VHDL kódem. V podsekcích~\ref{sec:basys2} a \ref{sec:xilinxise} je stručně popsána použitá vývojová deska a vývojové prostředí, které se váže k FPGA, které deska obsahuje.
