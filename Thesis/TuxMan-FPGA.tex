@@ -436,10 +436,11 @@ Rozeznáváme dva typy FSM na základě definičního oboru výstupní funkce~\c
 
 \subsection{Synchronní návrh}\label{sec:synchronniaasynchronninavrh}
 \subsubsection{Pravidla návrhu synchronního obvodu}
-Synchronní obvod je takový obvod, ve kterém všechny sekvenční části obvodu mají na svůj hodinový vstup přivedený stejný signál, aby měnily svůj stav ve stejný čas. Tento signál můžeme nazývat společné hodiny. Společné hodiny mění svůj stav na dané frekvenci (nejčastěji dle krystalu v obvodu). Tuto část obvodu můžeme nazývat hodinová doména. Pro návrh synchronního návrhu platí několik pravidel, které je nutné dodržet pro správnost návrhu. Společné hodiny nesmí být hradlované (signál musí být přiveden přímo k hodinovým vstupům sekvenčních obvodů). V případě hradlování společných hodin může docházet k časovým rezervám v jednotlivých částech obvodu. Dále je nutné, aby obvod obsahoval synchronní reset. Po synchronním resetu obvodu změní stav celý obvod společně a nedojde k časovým nesrovnalostem. \par
-Při návrhu se nemusí vždy pracovat pouze s jednou hodinovou doménou. V tomto případě je nutné společné hodiny synchronizovat specializovaným obvodem, který můžeme nazývat synchronizér. Synchronizér se může skládat z D klopných obvodů, které mají dané podmínky pro korektní funkci. Vstupní hodnota D klopného obvodu nesmí být změněna krátce před příchodem náběžné hrany na hodinovém vstupu (tj. předstih). Zároveň nesmí být změněna těsně po příchodu náběžné hrany na hodinovém vstupu (tj. přesah). V případě porušení těchto podmínek se může stát, že klopný obvod bude mít abnormálně zpožděnou, nebo kolísavou odezvu. Příklad synchronizéru je na obrázku\ref{fig:synchronizer}.
+Synchronní obvod je takový obvod, ve kterém všechny sekvenční části obvodu mají na svůj hodinový vstup přivedený stejný signál, aby měnily svůj stav ve stejný čas. Tento signál můžeme nazývat společné hodiny. Společné hodiny mění svůj stav na dané frekvenci (nejčastěji dle krystalu v obvodu). Tuto část obvodu můžeme nazývat hodinová doména. Pro návrh synchronního návrhu platí několik pravidel, které je nutné dodržet pro správnost návrhu. Společné hodiny nesmí být hradlované (signál musí být přiveden přímo k hodinovým vstupům sekvenčních obvodů). V případě hradlování společných hodin může docházet k časovým rezervám v jednotlivých částech obvodu. Dále je nutné, aby obvod obsahoval synchronní reset. Po synchronním resetu obvodu změní stav celý obvod společně a nedojde k časovým nesrovnalostem.~\cite{hodinovedomeny} \par
+Při návrhu se nemusí vždy pracovat pouze s jednou hodinovou doménou. V tomto případě je nutné společné hodiny synchronizovat specializovaným obvodem, který můžeme nazývat synchronizér. Synchronizér se může skládat z D klopných obvodů, které mají dané podmínky pro korektní funkci. Vstupní hodnota D klopného obvodu nesmí být změněna krátce před příchodem náběžné hrany na hodinovém vstupu (tj. předstih). Zároveň nesmí být změněna těsně po příchodu náběžné hrany na hodinovém vstupu (tj. přesah).~\cite{hodinovedomeny} V případě porušení těchto podmínek se může stát, že klopný obvod bude mít abnormálně zpožděnou, nebo kolísavou odezvu. Příklad synchronizéru je na obrázku\ref{fig:synchronizer}.
 \begin{figure}
 \centering
+\includegraphics[width=0.9\columnwidth]{/LogicalBlocks/Synchronizer.pdf}
 \caption{Příklad návrhu synchronizéru.}
 \label{fig:synchronizer}
 \end{figure}
@@ -447,7 +448,7 @@ Při návrhu se nemusí vždy pracovat pouze s jednou hodinovou doménou. V tomt
 Datové signály jsou řízené řídícími signály synchronizéru. Protokol řídících signálů musí být navržen tak, aby se měnil vždy jen jeden. Řídící signál můžeme nazývat strobe. Úkolem tohoto protokolu je indikace, zda jsou data aktuální (tj. na signálu strobe bude logická $1$, dokud nezačne opět probíhat příchod nových dat).
 \subsection{Jazyk VHDL}\label{sec:jazykvhdl}
 \subsubsection{Charakteristika jazyka VHDL}
-VHDL (VHSIC (Very-High-Speed Integrated Circuit, česky velmi rychlý integrovaný obvod) Hardware Description Language) je programovací jazyk sloužící pro popis hardware (tj. Hardware Description Language, zkr. HDL, česky jazyk popisující hardware). Používá se pro návrh digitálních integrovaných obvodů, např. u FPGA (Field of Programmable Gate Array, česky programovatelná hradlová pole). VHDL je silně typovaný jazyk a umožňuje popsat obvod na hradlové, RTL (Register Transfer Level, česky přenos na úrovni registrů) i algoritmické úrovni.
+VHDL (VHSIC (Very-High-Speed Integrated Circuit, česky velmi rychlý integrovaný obvod) Hardware Description Language) je programovací jazyk sloužící pro popis hardware (tj. Hardware Description Language, zkr. HDL, česky jazyk popisující hardware). Používá se pro návrh digitálních integrovaných obvodů, např. u FPGA (Field of Programmable Gate Array, česky programovatelná hradlová pole). VHDL je silně typovaný jazyk a umožňuje popsat obvod na hradlové, RTL (Register Transfer Level, česky přenos na úrovni registrů) i algoritmické úrovni~\cite{vhdlI}.
 \subsubsection{Datové typy}
 VHDL je silně typovaný jazyk, při operacích je tedy nutné, aby se typy shodovaly. Jedny z důležitých základních datových typů jsou: , bit, integer, std\textunderscore logic a std\textunderscore logic\textunderscore vector, . 
 \begin{itemize}
@@ -461,13 +462,14 @@ VHDL je silně typovaný jazyk, při operacích je tedy nutné, aby se typy shod
 \end{itemize}
 
 \subsubsection{Základní konstrukce}
-Konstrukce jazyka VHDL se dělí na několik částí. Jednou z nich je tzv. entita. Entita popisuje pouze rozhraní, nikoliv chování, nebo vnitřní strukturu návrhu. Obsahuje tedy definici vstupních a výstupních portů. Příklad návrhu entity multiplexoru je na obrázku~\ref{fig:entityexample}.
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{/VHDL/EntityExample.png}
-\caption{Příklad návrhu entity multiplexoru.}
-\label{fig:entityexample}
-\end{figure}
+Konstrukce jazyka VHDL se dělí na několik částí. Jednou z nich je tzv. entita. Entita popisuje pouze rozhraní, nikoliv chování, nebo vnitřní strukturu návrhu. Obsahuje tedy definici vstupních a výstupních portů. Příklad návrhu entity multiplexoru se dvěma datovými vstupy $A, B$, jedním řídícím vstupem $SEL$ a výstupem $Y$:
+\begin{lstlisting}[language=VHDL]
+entity MULTIPLEXER is
+port(   A, B, SEL 	: in bit;
+	Y		: out bit
+	);
+end MULTIPLEXER;
+\end{lstlisting}
 Další částí je architektura. Architektura obsahuje chování a vnitřní strukturu entity. Architektura tedy musí být definována uvnitř entity a nelze, aby fungovala samostatně. Entita může obsahovat více architektur. Ta se poté dělí na dvě části. Deklarační a sekci paralelních příkazů. Deklarační část se nachází před klíčovým slovem begin a je vyhrazena pro deklaraci signálů, konstant, nebo typů. Součástí sekce paralelních příkazů může být instance koponent, behaviorální popis (tj. popis chování), nebo tzv. procesy a nachází se v tělě architektury (tj. část za klíčovým slovem begin). Příklad architektury výše uvedeného multiplexoru:
 \begin{lstlisting}[language=VHDL]
 architecture MUX_BODY of MULTIPLEXER is
@@ -483,7 +485,7 @@ Y <= ASEL or BSEL;
 
 end MUX_BODY;
 \end{lstlisting}
-Proměnná označená klíčovým slovem signal značí stejnojmenný signál v obvodu. Klíčové slovo $std\textunderscore logic$ říká, že se jedná o jednobitový signál. V případě vícebitového signálu by bylo využito klíčové slovo $std\textunderscore logic\textunderscore vector$. Signál si pamatuje svou hodnotu, dokud není změněna dalším přiřazením. V části paralelních příkazů operátor $<=$ zastupuje operátor přiřazení. Hodnota z pravé strany je tedy po vyhodnocení logické operace přiřazena signálu na levé straně. Všechny logické operace v tomto případě jsou vyhodnocovány paralelně. Tato metoda se většinou využívá pro popis chování kombinačních obvodů. V případě popisu sekvenčního obvodu je nejčastěji využíván tzv. proces. Proces je součástí architektury a i přes to, že popisuje sekvenční obvod, tak běží souběžně. V sekvenčním popisu je možné krom operátorů přiřazení a logických operací využívat také podmínky, jako je např. $if$, nebo $case$. V případě psaní syntetizovatelného kódu proces obsahuje citlivostní seznam a opět popis chování. Citlivostní seznam je seznam signálů, na který sekvenční obvod reaguje (u sekvenčních obvodů hodinový vstup a synchronní reset). Příklad procesu, který popisuje D klopný obvod, kde $D$ je vstupní hodnota, $Q$ je výstupní, $clk$ jsou hodiny a $reset$ je synchronní reset:
+Proměnná označená klíčovým slovem signal značí stejnojmenný signál v obvodu. Klíčové slovo $std\textunderscore logic$ říká, že se jedná o jednobitový signál. V případě vícebitového signálu by bylo využito klíčové slovo $std\textunderscore logic\textunderscore vector$. Signál si pamatuje svou hodnotu, dokud není změněna dalším přiřazením.~\cite{vhdlI} V části paralelních příkazů operátor $<=$ zastupuje operátor přiřazení. Hodnota z pravé strany je tedy po vyhodnocení logické operace přiřazena signálu na levé straně. Všechny logické operace v tomto případě jsou vyhodnocovány paralelně. Tato metoda se většinou využívá pro popis chování kombinačních obvodů. V případě popisu sekvenčního obvodu je nejčastěji využíván tzv. proces. Proces je součástí architektury a i přes to, že popisuje sekvenční obvod, tak běží souběžně. V sekvenčním popisu je možné krom operátorů přiřazení a logických operací využívat také podmínky, jako je např. $if$, nebo $case$. V případě psaní syntetizovatelného kódu proces obsahuje citlivostní seznam a opět popis chování. Citlivostní seznam je seznam signálů, na který sekvenční obvod reaguje (u sekvenčních obvodů hodinový vstup a synchronní reset). Příklad procesu, který popisuje D klopný obvod, kde $D$ je vstupní hodnota, $Q$ je výstupní, $clk$ jsou hodiny a $reset$ je synchronní reset:
 \begin{lstlisting}[language=VHDL]
 D_FLIP_FLOP : process (clk, reset)
 begin
@@ -497,14 +499,29 @@ begin
 end process;
 \end{lstlisting}
 Pokud na hodinách obvod zaznamená náběžnou hranu a není aktivní synchronní reset, tak na signál $Q$ zapíše aktuální hodnotu na signálu $D$. \par
-Celý obvod je možné popsat v rámci jedné entity, pro přehlednost je možné ale využívat componenty. Při návrhu většího obvodu je vhodné logicky oddělit části obvodů od sebe a vytvořit z nich entity, které je možné poté propojit v nadřazené entitě pomocí klíčového slova component a namapování vstupních a výstupních signálů jednotlivých entit pomocí příkazu port map. Při mapování je poté možné pouze přiřadit vstupní a výstupní signály k signálům v nadřazené entitě.  
+Celý obvod je možné popsat v rámci jedné entity, pro přehlednost je možné ale využívat componenty. Při návrhu většího obvodu je vhodné logicky oddělit části obvodů od sebe a vytvořit z nich entity, které je možné poté propojit v nadřazené entitě pomocí klíčového slova component a namapování vstupních a výstupních signálů jednotlivých entit pomocí příkazu port map. Při mapování je poté možné pouze přiřadit vstupní a výstupní signály k signálům v nadřazené entitě~\cite{vhdlI}.  
 \subsubsection{Popis FSM}
-Jazyk VHDL nezná pojem automatu a existuje mnoho způsobů, jak jej popsat ve VHDL. Často používaný popis a zároveň takový, který usnadní práci logické syntéze programu je metoda se třemi procesy. Prvním procesem je přechodová funkce a jedná se o kombinační proces, který na základě vstupních hodnot vyhodnocuje, jaký bude příští stav FSM. Vstupy přechodové funkce jsou stavy a vstupy FSM a jejím výstupem je příští stav. Druhý proces je registr stavu, který je sekvenčním procesem. Jeho vstupem je příští stav a výstupem je nový aktuální stav. Poslední proces je kombinační proces zvaný výstupní funkce, který na základě aktuálního stavu a v případě návrhu Mealyho FSM i vstupních hodnot vyhodnocuje výstup FSM. Výstupní funkce má jako vstupy stav a dle návrhu i vstup FSM. Výstupem je výstup FSM.
+Jazyk VHDL nezná pojem automatu a existuje mnoho způsobů, jak jej popsat ve VHDL. Často používaný popis a zároveň takový, který usnadní práci logické syntéze programu je metoda se třemi procesy. Prvním procesem je přechodová funkce a jedná se o kombinační proces, který na základě vstupních hodnot vyhodnocuje, jaký bude příští stav FSM. Vstupy přechodové funkce jsou stavy a vstupy FSM a jejím výstupem je příští stav. Druhý proces je registr stavu, který je sekvenčním procesem. Jeho vstupem je příští stav a výstupem je nový aktuální stav. Poslední proces je kombinační proces zvaný výstupní funkce, který na základě aktuálního stavu a v případě návrhu Mealyho FSM i vstupních hodnot vyhodnocuje výstup FSM. Výstupní funkce má jako vstupy stav a dle návrhu i vstup FSM. Výstupem je výstup FSM.~\cite{vhdlII}
 
 \section{Programovatelná hradlová pole FPGA}\label{sec:fpga}
 Tato sekce se zabývá tím, co jsou programovatelná hradlová pole (Field of programmable gate array, FPGA) a jak probíhá práce s těmito hradlovými poli na vývojové desce. V podsekci~\ref{sec:dostupneprostredky} popisuji části FPGA, které jsou použity pro implementaci číslicového obvodu. Podsekce~\ref{sec:logickasynteza} stručně vysvětluje kroky nezbytné pro implementaci samotného číslicového obvodu na základě jeho popisu VHDL kódem. V podsekcích~\ref{sec:basys2} a \ref{sec:xilinxise} je stručně popsána použitá vývojová deska a vývojové prostředí, které se váže k FPGA, které deska obsahuje.
 
 \subsection{Dostupné prostředky}\label{sec:dostupneprostredky}
+\subsubsection{Základní stavební prvky}
+Technologie FPGA se skládá ze tří základních stavebních prvků. Jedním z nich je propojení. Propojení tvoří síť vodičů, které jsou propojeny MOS tranzistory a tzv. antipojistkami (nevodivý prvek, který je možné vnějším působením napětí prorazit a poté přejde do vodivého stavu).  Dle nastavení buňky v konfigurační paměti jsou vodiče pomocí tranzistorů spojeny nebo pomocí antipojistek rozpojeny. Stejně jako u logických hradel pro tyto spínací prvky platí, že jejich odpor působí přídavné zpoždění. Při konfiguraci je tedy potřeba, aby FPGA vytvořilo specializovaný rozvod hodinového signálu, který zajistí, že signály budou správně načasovány. Hodinový signál mívá stromovou topologii k zajištění co největší časové přesnosti v celém obvodu. Druhým základním stavebním prvkem jsou tzv. Look-up Tables (zkr. LUT). Pomocí programového propojení lze nakonfigurovat síť kombinačních prvků. FPGA využije části konfigurační paměti jako pravdivostní tabulky  k implementaci logické funkce. LUT může být zakreslen jako na obrázku~\ref{fig:lut}. 
+\begin{figure}
+\centering
+\caption{Příklad zakreslení LUT.}
+\label{fig:lut}
+\end{figure}
+Posledním stavebním prvkem jsou registry. Typicky ke každé logické funkci přísluší jeden registr. V FPGA převládají hranové D klopné obvody, které mají typicky vstup pro povolení hodin. Základní blok může vypadat jako na obrázku~\ref{fig:basicblockfpga}. 
+\begin{figure}
+\centering
+\caption{Příklad základního bloku FPGA}
+\label{fig:basicblockfpga}
+\end{figure}
+
+
 \subsection{Logická syntéza}\label{sec:logickasynteza}
 \subsection{Vývojová deska Digilent Basys 2}\label{sec:basys2}
 \subsection{Prostředí Xilinx ISE}\label{sec:xilinxise}
