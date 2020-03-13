@@ -45,7 +45,7 @@ signal compensed_signal_1 : STD_LOGIC; --PS/2 signals sync
 signal compensed_signal_2 : STD_LOGIC;
 
 signal ps2_data_synced : STD_LOGIC;
-signal ps2_clk_synced : STD_LOGIC; -----------------------
+signal ps2_clk_synced : STD_LOGIC;
 
 signal falling_edge_detection : STD_LOGIC;
 
